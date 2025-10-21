@@ -1,0 +1,17 @@
+{
+  "settings": {
+    "appName": "HueSyncStudio",
+    "version": "1.0.0"
+  },
+  "bridges": [],
+  "audio": {
+    "device": "default",
+    "bands": {
+      "low": { "start": 20, "end": 250 },
+      "mid": { "start": 250, "end": 2000 },
+      "high": { "start": 2000, "end": 20000 }
+    },
+    "peakHold": 0.1,
+    "decay": 0.95
+  }
+}

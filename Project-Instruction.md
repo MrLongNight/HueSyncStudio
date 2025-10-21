@@ -122,6 +122,9 @@ jobs:
           tag_name: v${{ github.run_number }}
           name: HueSyncStudio Release ${{ github.run_number }}
 
+7. Task-Gruppen (TG) – Arbeitsanweisungen
+​Jede TG ist eine abgeschlossene, selbständige Einheit.
+
 TG-ID Modul Aufgabe und Ergebnis
 TG01 Core & Projekt-Setup Erstelle die definierte Ordnerstruktur. Implementiere Logger (spdlog) und ConfigManager (nlohmann::json). Erstelle default_config.json. Verifiziere, dass Build und Tests in der CI-Umgebung fehlerfrei durchlaufen.
 TG02 AudioAnalyse (Basis) Implementiere AudioAnalyzer mit RtAudio/WASAPI. Führe Basis-Echtzeit-FFT mit KissFFT durch. Extrahiere Frequenzbandwerte (Low / Mid / High).

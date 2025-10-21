@@ -1,0 +1,33 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git vcpkg
+          .\\vcpkg\\bootstrap-vcpkg.bat
+      - name: Install dependencies
+        run: .\\vcpkg\\vcpkg.exe install qt6-base qt6-network qt6-websockets spdlog nlohmann-json catch2 rtaudio
+      - name: Configure
+        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake -DBUILD_TESTING=ON
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Run Tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Package artifacts
+        run: cmake --build build --config Release --target package || true
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/*.zip
+          tag_name: v${{ github.run_number }}
+          name: HueSyncStudio Release ${{ github.run_number }}

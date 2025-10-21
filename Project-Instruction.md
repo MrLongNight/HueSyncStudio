@@ -122,21 +122,23 @@ jobs:
           tag_name: v${{ github.run_number }}
           name: HueSyncStudio Release ${{ github.run_number }}
 
-7. Task-Gruppen (TG) – Arbeitsanweisungen
-Jede TG ist eine abgeschlossene, selbständige Einheit.
-| TG-ID | Modul | Aufgabe und Ergebnis |
-|---|---|---|
-| TG01 | Core & Projekt-Setup | Erstelle die definierte Ordnerstruktur. Implementiere Logger (spdlog) und ConfigManager (nlohmann::json). Erstelle default_config.json. Verifiziere, dass Build und Tests in der CI-Umgebung fehlerfrei durchlaufen. |
-| TG02 | AudioAnalyse (Basis) | Implementiere AudioAnalyzer mit RtAudio/WASAPI. Führe Basis-Echtzeit-FFT mit KissFFT durch. Extrahiere Frequenzbandwerte (Low / Mid / High). |
-| TG03 | HueBridge + Streaming | Implementiere den MultiBridgeManager zur Verwaltung von mehreren Bridge-Instanzen. Jede Instanz muss Discovery/Authentifizierung (REST) und DTLS-Streaming (Entertainment API V2) unterstützen. |
-| TG04 | Lampensteuerung & Gruppenmanager | Lade Lampen mit Positionen (x,y,z) von allen Bridges. Implementiere den LampGroupManager zur logischen Gruppierung. Adressierung von Steuerbefehlen pro Lampe/Gruppe über den korrekten Modus (DTLS oder REST). |
-| TG05 | ColorGroupEditor + Farbabweichung | Implementiere die Logik des ColorGroupEditor zur Definition von Farbgruppen (Color Palettes). Implementiere den Parameter "Farbabweichung" (Deviation). |
-| TG06 | EffektEngine | Implementiere die Hauptlogik der EffectEngine. Implementiere einen dedizierten Steuermodus für langsame/manuelle Effekte (REST/HTTP) und den DTLS-Modus. Erstelle Basis-Effekte (Pulse, Spectrum, ColorFlow) und eine manuelle Override-Funktion. Die Engine muss die optionalen Z-Werte (TG12) zur Effektberechnung einbeziehen. |
-| TG07 | UI & Visualisierung | Erstelle das Haupt-QML-Interface (AppWindow.qml). Implementiere die Live-Visualisierung des FFT-Graphen (AudioView.qml) und die Live-Anzeige der Lampenkarte mit aktuellen Farben/Zuständen. Implementiere UI-Elemente zur Konfiguration mehrerer Bridges und zur manuellen Steuerung der Ambiance-Gruppen. |
-| TG08 | WebSocket-API | Implementiere den WebSocketServer. Definiere und implementiere die Schnittstellen-Events zur externen Steuerung. Erweitere die Befehle, um die Ziel-Bridge und den Steuermodus explizit anzugeben. |
-| TG09 | Presets & Settings | Implementiere das Speichern und Laden von Presets (Effekte, Gruppen, Farbgruppen, Bridge-Konfigurationen, sowie TG11/TG12-Daten) als JSON. Erstelle das zugehörige UI zur Verwaltung der Presets. |
-| TG10 | Release & Installer | Konfiguriere CPack/NSIS zur Erstellung eines Windows-Installers. Überprüfe den GitHub Release Prozess und die korrekte Erstellung der Artefakte. |
-| TG11 | Erweiterte Audioanalyse | ERWEITERUNG TG02/06: Füge die Möglichkeit hinzu, die Start- und Endfrequenz der Frequenzbänder (Low/Mid/High) in der Konfiguration zu definieren und zu speichern. Implementiere eine Peak-Hold / Decay-Logik in AudioAnalyzer zur Glättung der Peaks für weichere Lichteffekte. Aktualisiere AudioView.qml zur interaktiven Hervorhebung der konfigurierten Frequenzbänder auf dem FFT-Graphen. |
-| TG12 | Visuelles 2D/3D-Mapping | ERWEITERUNG TG04/07: Implementiere im LampMap.qml die Funktion Drag & Drop der Lampen-Visualisierungen, um die virtuelle x/y-Position der Lampen zu speichern. Füge eine optionale z-Koordinate (Höhe) in die Lampen-Konfiguration (TG04/TG09) ein, um vertikale Effekte zu ermöglichen. Implementiere eine Gruppen-Mapping-Vorschau, die nur die aktuell ausgewählten Lampen hervorhebt. |
-
-
+TG-ID Modul Aufgabe und Ergebnis
+TG01 Core & Projekt-Setup Erstelle die definierte Ordnerstruktur. Implementiere Logger (spdlog) und ConfigManager (nlohmann::json). Erstelle default_config.json. Verifiziere, dass Build und Tests in der CI-Umgebung fehlerfrei durchlaufen.
+TG02 AudioAnalyse (Basis) Implementiere AudioAnalyzer mit RtAudio/WASAPI. Führe Basis-Echtzeit-FFT mit KissFFT durch. Extrahiere Frequenzbandwerte (Low / Mid / High).
+TG03 HueBridge + Streaming Implementiere den MultiBridgeManager zur Verwaltung von mehreren Bridge-Instanzen. Jede Instanz muss Discovery/Authentifizierung (REST) und DTLS-Streaming (Entertainment API V2) unterstützen.
+TG04 Lampensteuerung & Gruppenmanager Lade Lampen mit Positionen (x,y,z) von allen Bridges. Implementiere den LampGroupManager zur logischen Gruppierung. Adressierung von Steuerbefehlen pro Lampe/Gruppe über den korrekten Modus (DTLS oder REST).
+TG05 ColorGroupEditor + Farbabweichung Implementiere die Logik des ColorGroupEditor zur Definition von Farbgruppen (Color Palettes). Implementiere den Parameter "Farbabweichung" (Deviation).
+TG06 Modulare EffektEngine (Strategy) WICHTIG: Modularität durch Strategy Pattern sicherstellen. Implementiere eine abstrakte Basisklasse EffectBase.h mit einer rein virtuellen Methode void applyEffect(const AudioData& audio, LampGroup& group, const ColorGroup& colors). Die EffectEngine verwaltet die aktive Instanz und die drei Effekte (Pulse, Spectrum, ColorFlow).
+TG07 UI & Visualisierung (Modular) Ziel: Modernes, intuitives und anpassbares GUI. Architektur: AppWindow.qml ist der Hauptcontainer und muss ein Docking/Panel-System (z.B. mittels SplitView und logischer Komponenten-Trennung) implementieren. Alle Hauptbereiche müssen über eine Menüleiste (oder ein Einstellungsfeld) ausblendbar sein.
+    Hauptkomponenten:
+    1. Effect/Control Panel (EffectPanel.qml): Primäre Steuerung (Effektauswahl, Bridge-Konfiguration, manuelle Override-Funktion). Position: Typischerweise links oder rechts angedockt.
+    2. Live FFT Viewer (AudioView.qml): Muss einen umschaltbaren Modus (Simple/Advanced) implementieren. Muss resizable/dockable sein.
+    3. 2D/3D Map & Control (LampMap.qml): Zeigt das Lampen-Layout, unterstützt Drag & Drop (TG12) und die Live-Anzeige der aktuellen Lampenfarben/Zustände. Muss resizable/dockable sein.
+    Style: Verwende ein modernes, dunkles (dark mode) Farbschema mit klaren, responsiven Layouts.
+TG08 WebSocket-API Implementiere den WebSocketServer. Definiere und implementiere die Schnittstellen-Events zur externen Steuerung. Erweitere die Befehle, um die Ziel-Bridge und den Steuermodus explizit anzugeben.
+TG09 Presets & Settings Implementiere das Speichern und Laden von Presets (Effekte, Gruppen, Farbgruppen, Bridge-Konfigurationen, sowie TG11/TG12-Daten) als JSON. Erstelle das zugehörige UI zur Verwaltung der Presets.
+TG10 Release & Installer Konfiguriere CPack/NSIS zur Erstellung eines Windows-Installers. Überprüfe den GitHub Release Prozess und die korrekte Erstellung der Artefakte.
+TG11 Erweiterte Audioanalyse ERWEITERUNG TG02/06/07: Füge die Möglichkeit hinzu, die Start- und Endfrequenz der Frequenzbänder (Low/Mid/High) in der Konfiguration zu definieren und zu speichern. Implementiere eine Peak-Hold / Decay-Logik in AudioAnalyzer. Die Darstellung in AudioView.qml erfolgt wie folgt:
+    Simple Mode (TG07): Zeigt nur drei große, farbcodierte Felder (Low/Mid/High). Die Helligkeit/Größe jedes Feldes muss die aktuelle, geglättete RMS-Energie des jeweiligen Frequenzbandes reflektieren.
+    Advanced Mode (TG07): Zeigt den detaillierten FFT-Graphen, die Schieberegler zur dynamischen Frequenzband-Steuerung und die interaktive Hervorhebung der konfigurierten Bänder.
+TG12 Visuelles 2D/3D-Mapping ERWEITERUNG TG04/07: Implementiere im LampMap.qml die Funktion Drag & Drop der Lampen-Visualisierungen, um die virtuelle x/y-Position der Lampen zu speichern. Füge eine optionale z-Koordinate (Höhe) in die Lampen-Konfiguration ein, um vertikale Effekte zu ermöglichen. Implementiere eine Gruppen-Mapping-Vorschau, die nur die aktuell ausgewählten Lampen hervorhebt.

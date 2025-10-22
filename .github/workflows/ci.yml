@@ -17,6 +17,16 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get update && sudo apt-get install -y libasound2-dev libgl1-mesa-dev qt6-base-dev qt6-base-dev-tools
 
+- name: Init vcpkg submodules
+  run: git submodule update --init --recursive
+
+- name: Check for qt6-base port
+  run: |
+    if (!(Test-Path "vcpkg/ports/qt6-base")) {
+      Write-Error "qt6-base port not found in vcpkg/ports. Please ensure the submodule is initialized or add the port manually."
+      exit 1
+    }
+
       - name: Set Qt6 CMAKE_PREFIX_PATH
         run: |
           if [ -d "/usr/lib/x86_64-linux-gnu/qt6" ]; then

@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -17,6 +19,9 @@ jobs:
           .\\vcpkg\\bootstrap-vcpkg.bat
       - name: Install dependencies
         run: .\\vcpkg\\vcpkg.exe install qt6-base qt6-network spdlog nlohmann-json catch2 rtaudio
+        run: .\\vcpkg\\vcpkg.exe install qt6-base qt6-network qt6-websockets spdlog nlohmann-json catch2 rtaudio
+        run: .\\vcpkg\\vcpkg.exe install qt6-base qt6-network spdlog nlohmann-json catch2 rtaudio
+        run: .\\vcpkg\\vcpkg.exe install qt6-base spdlog nlohmann-json catch2 rtaudio
       - name: Configure
         run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake -DBUILD_TESTING=ON
       - name: Build

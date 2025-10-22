@@ -3,6 +3,9 @@
 #include "LampGroupManager.h"
 #include "ColorGroupEditor.h"
 #include "effects/Effect.h"
+#include "effects/PulseEffect.h"
+#include "effects/SpectrumEffect.h"
+#include "effects/ColorFlowEffect.h"
 #include "Logger.h"
 
 EffectEngine::EffectEngine(AudioAnalyzer& audioAnalyzer,
@@ -37,6 +40,20 @@ void EffectEngine::setActiveEffect(Effect* effect) {
     } else {
         Logger::get()->info("Effects cleared.");
     }
+}
+
+QString EffectEngine::getActiveEffectName() const {
+    if (!m_activeEffect) return "None";
+
+    if (dynamic_cast<PulseEffect*>(m_activeEffect)) {
+        return "Pulse";
+    } else if (dynamic_cast<SpectrumEffect*>(m_activeEffect)) {
+        return "Spectrum";
+    } else if (dynamic_cast<ColorFlowEffect*>(m_activeEffect)) {
+        return "ColorFlow";
+    }
+
+    return "Unknown";
 }
 
 void EffectEngine::manualOverride(const QString& groupName, const QColor& color, int brightness) {

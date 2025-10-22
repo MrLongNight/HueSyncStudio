@@ -20,6 +20,7 @@ public:
     void start();
     void stop();
     void setActiveEffect(Effect* effect);
+    QString getActiveEffectName() const;
     void manualOverride(const QString& groupName, const QColor& color, int brightness);
 
 public slots:

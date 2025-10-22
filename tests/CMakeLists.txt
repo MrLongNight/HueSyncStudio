@@ -9,6 +9,7 @@ add_executable(run_tests
     test_color_editor.cpp
     test_effects.cpp
     test_presets.cpp
+    test_websocket.cpp
 )
 
 # Define the path to the project source directory for the test executable

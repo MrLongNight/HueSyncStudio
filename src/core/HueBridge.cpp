@@ -19,11 +19,7 @@ const uint8_t FRAGMENT_NUMBER = 0;
 
 HueBridge::HueBridge(const QString& ipAddress, LampGroupManager& lampManager, QObject* parent)
     : QObject(parent), m_ipAddress(ipAddress), m_lampManager(lampManager), m_dtlsSocket(nullptr) {
-HueBridge::HueBridge(const QString& ipAddress, LampGroupManager& lampManager, QObject* parent)
-    : QObject(parent), m_ipAddress(ipAddress), m_lampManager(lampManager), m_dtlsSocket(nullptr) {
-HueBridge::HueBridge(const QString& ipAddress, QObject* parent)
-    : QObject(parent), m_ipAddress(ipAddress), m_dtlsSocket(nullptr) {
-    m_networkManager = new QNetworkManager(this);
+    m_networkManager = new QNetworkAccessManager(this);
     m_authTimer = new QTimer(this);
     connect(m_authTimer, &QTimer::timeout, this, &HueBridge::pollForAuthentication);
 }

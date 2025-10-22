@@ -53,7 +53,7 @@ Qt::ItemFlags LampModel::flags(const QModelIndex& index) const
 
 void LampModel::addLamp(const Lamp &lamp)
 {
-    beginInsertRows(QModelModelIndex(), rowCount(), rowCount());
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
     m_lamps.append(lamp);
     endInsertRows();
 }

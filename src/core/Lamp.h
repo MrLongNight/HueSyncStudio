@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QString>
+#include <QMetaType>
+
 
 struct Lamp {
     int id;

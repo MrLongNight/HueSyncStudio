@@ -20,6 +20,7 @@ HueSyncStudio is a professional, standalone Windows application for controlling 
 |--------------------|----------------------|
 | GUI / UI           | Qt 6 + QML           |
 | Audio Input        | RtAudio / WASAPI     |
+| FFT                | KissFFT              |
 | FFT                | KissFFT (submodule)  |
 | Network & Hue API  | Qt Network           |
 | Configuration/Data | nlohmann::json       |
@@ -40,6 +41,11 @@ This project uses C++17, CMake, and the vcpkg dependency manager.
 
 ### Build Steps
 
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd HueSyncStudio
+    ```
 1.  **Clone the repository and its submodules:**
     ```bash
     git clone --recursive <repository-url>

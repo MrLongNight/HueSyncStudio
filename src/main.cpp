@@ -6,6 +6,10 @@
 #include "core/ConfigManager.h"
 #include "core/AudioAnalyzer.h"
 #include "ui/AudioDataModel.h"
+#include "ui/LampModel.h" // Include the new model
+
+int main(int argc, char *argv[]) {
+    Logger::init();
 
 int main(int argc, char *argv[]) {
 #include <QUrl>
@@ -115,6 +119,16 @@ int main(int argc, char *argv[]) {
 
     QGuiApplication app(argc, argv);
 
+    // --- C++ / QML Integration ---
+    AudioAnalyzer analyzer(config, &app);
+    AudioDataModel audioDataModel(&app);
+    LampModel lampModel(&app); // Create the lamp model
+
+    // Add some mock data for TG12
+    lampModel.addLamp({1, "Lightstrip", 50.0, 50.0, 0.0});
+    lampModel.addLamp({2, "Play Bar 1", 150.0, 100.0, 0.0});
+    lampModel.addLamp({3, "Play Bar 2", 250.0, 150.0, 0.0});
+
     QQmlApplicationEngine engine;
     // The path must match the URI and filename from qt_add_qml_module
     const QUrl url(QStringLiteral("qrc:/HueSyncStudio.ui/AppWindow.qml"));
@@ -132,6 +146,10 @@ int main(int argc, char *argv[]) {
 
     QQmlApplicationEngine engine;
 
+    engine.rootContext()->setContextProperty("audioDataModel", &audioDataModel);
+    engine.rootContext()->setContextProperty("lampModel", &lampModel); // Expose lamp model
+
+    const QUrl url(QStringLiteral("qrc:/HueSyncStudio.ui/AppWindow.qml"));
     // Expose the C++ model to QML
     engine.rootContext()->setContextProperty("audioDataModel", &audioDataModel);
 
@@ -150,6 +168,12 @@ int main(int argc, char *argv[]) {
 
     engine.load(url);
 
+    if (!analyzer.startStream()) {
+        Logger::get()->error("Failed to start audio stream.");
+    }
+
+    int execResult = app.exec();
+    analyzer.stopStream();
     // Initialize and start the audio analyzer after the event loop has started
     AudioAnalyzer analyzer(config);
     if (!analyzer.startStream()) {

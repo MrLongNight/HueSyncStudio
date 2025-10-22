@@ -2,6 +2,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 set(CMAKE_AUTOMOC ON)
 
+qt_add_qml_module(HueSyncStudio
 # This function automatically creates a resource file from the QML files
 # and links it to the specified target.
 qt_add_qml_module(HueSyncStudio
@@ -23,6 +24,7 @@ add_executable(HueSyncStudio
     core/ConfigManager.cpp
     core/AudioAnalyzer.cpp
     ui/AudioDataModel.cpp
+    ui/LampModel.cpp
     core/HueBridge.cpp
     core/MultiBridgeManager.cpp
     core/LampGroupManager.cpp

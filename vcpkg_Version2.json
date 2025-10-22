@@ -1,0 +1,15 @@
+{
+  "name": "huesyncstudio",
+  "version": "1.0.0",
+  "description": "Professional application for ultra-low latency Philips Hue Entertainment audio sync",
+  "homepage": "https://github.com/MrLongNight/HueSyncStudio",
+  "dependencies": [
+    "nlohmann-json",
+    {
+      "name": "qt",
+      "default-features": false,
+      "features": ["qml", "quickcontrols", "widgets"]
+    }
+  ],
+  "builtin-baseline": "2023-10-22"
+}

@@ -20,6 +20,7 @@ add_executable(HueSyncStudio
     core/AudioAnalyzer.cpp
     core/HueBridge.cpp
     core/MultiBridgeManager.cpp
+    core/LampGroupManager.cpp
 )
 
 target_include_directories(HueSyncStudio PUBLIC

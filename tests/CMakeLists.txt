@@ -5,6 +5,7 @@ add_executable(run_tests
     test_config.cpp
     test_audio.cpp
     test_bridge.cpp
+    test_lamp_manager.cpp
 )
 
 # Define the path to the project source directory for the test executable

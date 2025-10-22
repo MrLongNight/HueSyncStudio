@@ -1,10 +1,15 @@
 #include "MultiBridgeManager.h"
 #include "HueBridge.h"
+#include "LampGroupManager.h"
 #include "Logger.h"
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
 
+MultiBridgeManager::MultiBridgeManager(LampGroupManager& lampManager, QObject* parent)
+    : QObject(parent), m_lampManager(lampManager) {
+    m_networkManager = new QNetworkManager(this);
+    connect(m_networkManager, &QNetworkManager::finished, this, &MultiBridgeManager::onDiscoveryFinished);
 MultiBridgeManager::MultiBridgeManager(QObject* parent) : QObject(parent) {
     m_networkManager = new QNetworkAccessManager(this);
     connect(m_networkManager, &QNetworkAccessManager::finished, this, &MultiBridgeManager::onDiscoveryFinished);
@@ -44,6 +49,12 @@ void MultiBridgeManager::onDiscoveryFinished(QNetworkReply* reply) {
         QString ip = obj["internalipaddress"].toString();
         if (!ip.isEmpty()) {
             Logger::get()->info("Discovered Hue Bridge at IP: {}", ip.toStdString());
+            HueBridge* bridge = new HueBridge(ip, m_lampManager, this);
+            m_bridges.append(bridge);
+            m_lampManager.registerBridge(bridge); // Register the bridge
+            // In a real app, we would now trigger authentication, e.g., from the UI
+            // For now, let's auto-authenticate to trigger the lamp fetching
+            bridge->authenticate();
             HueBridge* bridge = new HueBridge(ip, this);
             m_bridges.append(bridge);
         }

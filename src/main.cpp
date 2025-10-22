@@ -2,6 +2,7 @@
 #include "core/ConfigManager.h"
 #include "core/AudioAnalyzer.h"
 #include "core/MultiBridgeManager.h"
+#include "core/LampGroupManager.h"
 #include <QCoreApplication>
 #include <QTimer>
 
@@ -33,6 +34,14 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    LampGroupManager lampManager;
+    MultiBridgeManager bridgeManager(lampManager);
+    bridgeManager.discoverBridges();
+
+    // In a real app, the UI would drive the authentication and group selection.
+    // For now, let's run for 15 seconds to allow for discovery and a manual
+    // link button press simulation before exiting.
+    QTimer::singleShot(15000, [&]() {
     // AudioAnalyzer is not used in this TG, but we leave it for now.
     // AudioAnalyzer analyzer(config);
     // analyzer.startStream();

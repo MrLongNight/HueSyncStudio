@@ -6,11 +6,29 @@
 #include <QNetworkReply>
 #include <QTimer>
 #include <QSslSocket>
+#include "Lamp.h"
+
+class LampGroupManager; // Forward declaration
 
 class HueBridge : public QObject {
     Q_OBJECT
 
 public:
+    explicit HueBridge(const QString& ipAddress, LampGroupManager& lampManager, QObject* parent = nullptr);
+
+    const QString& getId() const;
+    void authenticate();
+    void startStreaming(const QString& entertainmentGroupId);
+
+    // Placeholder command methods
+    void sendRestCommand(int lightId, bool on, int brightness);
+    void sendDtlsStream(const QByteArray& data);
+
+
+signals:
+    void authenticated(const QString& apiKey);
+    void authenticationFailed(const QString& error);
+    void entertainmentGroupsFound(); // To notify when setup is complete
     explicit HueBridge(const QString& ipAddress, QObject* parent = nullptr);
 
     void authenticate();
@@ -29,6 +47,16 @@ private slots:
     void onEnableStreamingReply(QNetworkReply* reply);
     void onSocketConnected();
     void onSocketSslErrors(const QList<QSslError>& errors);
+    void onFetchGroupsReply(QNetworkReply* reply);
+
+private:
+    void fetchEntertainmentGroups();
+    void setupDtlSocket(const QString& psk, const QString& pskIdentity);
+
+    QString m_ipAddress; // Also used as a unique ID for the bridge
+    QString m_apiKey;
+    QString m_clientKey; // The PSK for DTLS
+    LampGroupManager& m_lampManager;
 
 
 private:

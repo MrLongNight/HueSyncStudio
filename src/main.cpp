@@ -85,6 +85,9 @@ int main(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
 
+int main(int argc, char *argv[]) {
+    Logger::init();
+    Logger::get()->info("Starting HueSyncStudio GUI...");
     Logger::init();
     Logger::get()->info("Welcome to HueSyncStudio!");
 #include <QGuiApplication>
@@ -112,6 +115,9 @@ int main(int argc, char *argv[]) {
 
     QGuiApplication app(argc, argv);
 
+    QQmlApplicationEngine engine;
+    // The path must match the URI and filename from qt_add_qml_module
+    const QUrl url(QStringLiteral("qrc:/HueSyncStudio.ui/AppWindow.qml"));
     // --- C++ / QML Integration ---
     AudioAnalyzer analyzer(config, &app);
     AudioDataModel audioDataModel(&app);
@@ -143,6 +149,19 @@ int main(int argc, char *argv[]) {
     }, Qt::QueuedConnection);
 
     engine.load(url);
+
+    // Initialize and start the audio analyzer after the event loop has started
+    AudioAnalyzer analyzer(config);
+    if (!analyzer.startStream()) {
+        Logger::get()->error("Failed to start audio stream.");
+        // We don't exit here, the UI should still be usable.
+    }
+
+    // The application's main event loop is started here.
+    int execResult = app.exec();
+
+    // Stop the stream when the application is about to quit.
+    analyzer.stopStream();
 
     // --- Start Application Logic ---
     if (!analyzer.startStream()) {

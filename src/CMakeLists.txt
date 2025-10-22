@@ -2,6 +2,9 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 set(CMAKE_AUTOMOC ON)
 
+# This function automatically creates a resource file from the QML files
+# and links it to the specified target.
+qt_add_qml_module(HueSyncStudio
 qt_add_qml_module(HueSyncStudio
     URI "HueSyncStudio"
     TARGET HueSyncStudio

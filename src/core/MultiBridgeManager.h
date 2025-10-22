@@ -13,6 +13,7 @@ class MultiBridgeManager : public QObject {
 
 public:
     explicit MultiBridgeManager(LampGroupManager& lampManager, QObject* parent = nullptr);
+    explicit MultiBridgeManager(QObject* parent = nullptr);
 
     void discoverBridges();
     const QList<HueBridge*>& getBridges() const;

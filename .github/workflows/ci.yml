@@ -1,47 +1,98 @@
-  - name: Install system packages
-    run: sudo apt-get update && sudo apt-get install -y libasound2-dev libgl1-mesa-dev build-essential cmake git
+name: CI
 
-  - name: Cache vcpkg packages
-    uses: actions/cache@v4
-    with:
-      path: |
-        ${{ github.workspace }}/vcpkg/installed
-        ${{ github.workspace }}/vcpkg/packages
-        ${{ github.workspace }}/vcpkg/buildtrees
-        ${{ github.workspace }}/vcpkg/downloads
-      key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
-      restore-keys: |
-        vcpkg-${{ runner.os }}-
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-  - name: Bootstrap vcpkg
-    run: |
-      git clone https://github.com/microsoft/vcpkg.git ${{ github.workspace }}/vcpkg
-      cd ${{ github.workspace }}/vcpkg
-      ./bootstrap-vcpkg.sh -disableMetrics
-      ./vcpkg update
-    env:
-      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    
+    steps:
+      - uses: actions/checkout@v4
 
-  - name: Install vcpkg manifest dependencies
-    run: |
-      cd ${{ github.workspace }}/vcpkg
-      # Manifest mode: vcpkg.json in repo root wird automatisch verwendet
-      ./vcpkg install --triplet x64-linux
-    env:
-      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      - name: Install system packages (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libgl1-mesa-dev build-essential cmake git
 
-  - name: Configure (Release) with vcpkg toolchain
-    run: |
-      cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+      - name: Cache vcpkg packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/vcpkg/installed
+            ${{ github.workspace }}/vcpkg/packages
+            ${{ github.workspace }}/vcpkg/buildtrees
+            ${{ github.workspace }}/vcpkg/downloads
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
 
-  - name: Build (Release)
-    run: cmake --build build-release --parallel
+      - name: Bootstrap vcpkg (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git ${{ github.workspace }}/vcpkg
+          cd ${{ github.workspace }}/vcpkg
+          ./bootstrap-vcpkg.sh -disableMetrics
+        env:
+          VCPKG_ROOT: ${{ github.workspace }}/vcpkg
 
-  - name: Run Tests
-    run: ctest --test-dir build-release --output-on-failure
+      - name: Bootstrap vcpkg (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          if not exist vcpkg (
+            git clone https://github.com/microsoft/vcpkg.git %GITHUB_WORKSPACE%\vcpkg
+            cd %GITHUB_WORKSPACE%\vcpkg
+            .\bootstrap-vcpkg.bat
+          ) else (
+            echo vcpkg directory already exists
+          )
 
-  - name: Configure (Lint)
-    run: cmake -B build-lint -S . -DCMAKE_BUILD_TYPE=Debug -DENABLE_LINT=ON -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+      - name: Install vcpkg manifest dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cd ${{ github.workspace }}/vcpkg
+          # Manifest mode: vcpkg.json in repo root wird automatisch verwendet
+          ./vcpkg install --triplet x64-linux
+        env:
+          VCPKG_ROOT: ${{ github.workspace }}/vcpkg
 
-  - name: Static Analysis (clang-tidy)
-    run: cmake --build build-lint --parallel
+      - name: Install vcpkg manifest dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          if not exist vcpkg\vcpkg.exe (
+            echo Error: vcpkg.exe not found! Bootstrap failed.
+            exit /b 1
+          )
+          .\vcpkg\vcpkg.exe install --triplet x64-windows
+
+      - name: Configure (Release) with vcpkg toolchain (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Configure (Release) with vcpkg toolchain (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=%GITHUB_WORKSPACE%\vcpkg\scripts\buildsystems\vcpkg.cmake
+
+      - name: Build (Release)
+        run: cmake --build build-release --parallel
+
+      - name: Run Tests
+        run: ctest --test-dir build-release --output-on-failure
+
+      - name: Configure (Lint) (Linux)
+        if: runner.os == 'Linux'
+        run: cmake -B build-lint -S . -DCMAKE_BUILD_TYPE=Debug -DENABLE_LINT=ON -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Static Analysis (clang-tidy) (Linux)
+        if: runner.os == 'Linux'
+        run: cmake --build build-lint --parallel

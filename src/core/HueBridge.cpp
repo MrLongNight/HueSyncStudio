@@ -304,13 +304,5 @@ void HueBridge::sendDtlsStream(const LightStateMap& state) {
     }
 
     m_dtlsSocket->write(message);
-void HueBridge::sendRestCommand(int lightId, bool on, int brightness) {
-    Logger::get()->info("Placeholder: Send REST command to light {} on bridge {}: on={}, bri={}",
-        lightId, m_ipAddress.toStdString(), on, brightness);
 }
 
-void HueBridge::sendDtlsStream(const QByteArray& data) {
-    if (m_dtlsSocket && m_dtlsSocket->isOpen()) {
-         // Logger::get()->trace("Placeholder: Send DTLS stream to bridge {}", m_ipAddress.toStdString());
-    }
-}

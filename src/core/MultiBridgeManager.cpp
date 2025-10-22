@@ -61,12 +61,8 @@ void MultiBridgeManager::onDiscoveryFinished(QNetworkReply* reply) {
             Logger::get()->info("Discovered Hue Bridge at IP: {}", ip.toStdString());
             HueBridge* bridge = new HueBridge(ip, m_lampManager, this);
             m_bridges.append(bridge);
-            m_lampManager.registerBridge(bridge); // Register the bridge
-            // In a real app, we would now trigger authentication, e.g., from the UI
-            // For now, let's auto-authenticate to trigger the lamp fetching
+            m_lampManager.registerBridge(bridge);
             bridge->authenticate();
-            HueBridge* bridge = new HueBridge(ip, this);
-            m_bridges.append(bridge);
         }
     }
 

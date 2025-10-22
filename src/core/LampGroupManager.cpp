@@ -1,6 +1,7 @@
 #include "LampGroupManager.h"
 #include "HueBridge.h"
 #include "Logger.h"
+#include <QColor>
 
 LampGroupManager::LampGroupManager(QObject* parent) : QObject(parent) {
     createGroup("All");

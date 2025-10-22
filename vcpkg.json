@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "huesyncstudio",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "qtbase",
+    "qt6-websockets",
+    "spdlog",
+    "nlohmann-json",
+    "catch2",
+    "rtaudio"
+  ]
+}

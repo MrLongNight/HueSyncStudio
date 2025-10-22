@@ -22,7 +22,8 @@ if(ENABLE_LINT)
 endif()
 
 # --- Dependencies and Subdirectories ---
-find_package(spdlog REQUIRED)
+# Use CONFIG mode so CMake finds spdlogConfig.cmake provided by vcpkg
+find_package(spdlog CONFIG REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
 add_subdirectory(libs)

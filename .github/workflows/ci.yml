@@ -15,7 +15,7 @@ jobs:
           submodules: 'recursive' # Ensure submodules are checked out
 
       - name: Install Dependencies
-        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libgl1-mesa-dev
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libgl1-mesa-dev qt6-websockets-dev
 
       - name: Configure (Release)
         run: cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release

@@ -67,7 +67,10 @@ This project uses C++17, CMake, and the vcpkg dependency manager.
 3.  **Install dependencies:**
     The required dependencies will be installed automatically by CMake, but you can install them manually:
     ```bash
-    ./vcpkg/vcpkg install qt6-base spdlog nlohmann-json catch2 rtaudio qt6-network
+    # On Windows
+    .\vcpkg\vcpkg.exe install qtbase qtnetwork qtwebsockets qtdeclarative spdlog nlohmann-json catch2 rtaudio --triplet x64-windows
+    # On Linux
+    ./vcpkg/vcpkg install qtbase qtnetwork qtwebsockets qtdeclarative spdlog nlohmann-json catch2 rtaudio --triplet x64-linux
     ```
 
 4.  **Configure the project using CMake:**

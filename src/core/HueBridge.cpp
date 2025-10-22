@@ -152,26 +152,8 @@ void HueBridge::onFetchGroupsReply(QNetworkReply* reply) {
 
 void HueBridge::startStreaming(const QString& entertainmentGroupId) {
     if (m_apiKey.isEmpty() || m_clientKey.isEmpty()) {
-        emit streamingFailed("Not authenticated or client key missing.");
-        return;
-    }
-    const QUrl url(QString("http://%1/api/%2/groups/%3").arg(m_ipAddress, m_apiKey, entertainmentGroupId));
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    QJsonObject requestBody;
-    requestBody["stream"] = QJsonObject{{"active", true}};
         Logger::get()->error("Cannot start streaming: Not authenticated or client key missing.");
         emit streamingFailed("Not authenticated or client key missing.");
-        return;
-    }
-    Logger::get()->info("Enabling streaming mode for group {} on bridge {}", entertainmentGroupId.toStdString(), m_ipAddress.toStdString());
-    const QUrl url(QString("http://%1/api/%2/groups/%3").arg(m_ipAddress, m_apiKey, entertainmentGroupId));
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-void HueBridge::startStreaming(const QString& entertainmentGroupId) {
-    if (m_apiKey.isEmpty()) {
-        Logger::get()->error("Cannot start streaming: Not authenticated.");
-        emit streamingFailed("Not authenticated.");
         return;
     }
     Logger::get()->info("Enabling streaming mode for group {} on bridge {}", entertainmentGroupId.toStdString(), m_ipAddress.toStdString());

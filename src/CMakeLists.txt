@@ -18,6 +18,16 @@ add_executable(HueSyncStudio
     core/Logger.cpp
     core/ConfigManager.cpp
     core/AudioAnalyzer.cpp
+    core/HueBridge.cpp
+    core/MultiBridgeManager.cpp
+)
+
+target_include_directories(HueSyncStudio PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/core"
+)
+
+target_include_directories(HueSyncStudio PUBLIC
+    "${CMAKE_SOURCE_DIR}/libs/kissfft"
     ui/AudioDataModel.cpp
     ui/LampModel.cpp
 )
@@ -31,6 +41,7 @@ target_link_libraries(HueSyncStudio PRIVATE
     nlohmann_json::nlohmann_json
     kissfft
     rtaudio
+    Qt6::Network
     Qt6::Core
     Qt6::Gui
     Qt6::Qml

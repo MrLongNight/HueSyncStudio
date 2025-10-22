@@ -2,6 +2,8 @@
 
 HueSyncStudio is a professional, standalone Windows application for controlling Philips Hue Entertainment lights based on detailed, customizable audio analysis. The focus is on maximum precision, flexibility, and intuitive live control, with a particular emphasis on DJ and livestreaming scenarios.
 
+**Note on Security:** The bundled `kissfft` library has been updated to the latest version via a Git submodule to resolve potential security issues found in the previously included local copy.
+
 ## Features
 
 - **Multi-Bridge Support:** Stable connection to Hue Bridge v2 (REST + DTLS streaming), with support for multiple bridges and Entertainment groups.
@@ -19,6 +21,7 @@ HueSyncStudio is a professional, standalone Windows application for controlling 
 | GUI / UI           | Qt 6 + QML           |
 | Audio Input        | RtAudio / WASAPI     |
 | FFT                | KissFFT              |
+| FFT                | KissFFT (submodule)  |
 | Network & Hue API  | Qt Network           |
 | Configuration/Data | nlohmann::json       |
 | Testing            | Catch2               |
@@ -42,6 +45,15 @@ This project uses C++17, CMake, and the vcpkg dependency manager.
     ```bash
     git clone <repository-url>
     cd HueSyncStudio
+    ```
+1.  **Clone the repository and its submodules:**
+    ```bash
+    git clone --recursive <repository-url>
+    cd HueSyncStudio
+    ```
+    If you have already cloned the repository without the `--recursive` flag, you can initialize the submodules with:
+    ```bash
+    git submodule update --init --recursive
     ```
 
 2.  **Set up vcpkg:**

@@ -15,10 +15,30 @@ jobs:
           submodules: 'recursive' # Ensure submodules are checked out
 
       - name: Install Dependencies
-        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libgl1-mesa-dev
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libgl1-mesa-dev qt6-base-dev qt6-base-dev-tools
+
+      - name: Set Qt6 CMAKE_PREFIX_PATH
+        run: |
+          if [ -d "/usr/lib/x86_64-linux-gnu/qt6" ]; then
+            echo "CMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/qt6" >> $GITHUB_ENV
+          elif [ -d "/usr/lib/qt6" ]; then
+            echo "CMAKE_PREFIX_PATH=/usr/lib/qt6" >> $GITHUB_ENV
+          elif [ -d "/opt/Qt" ]; then
+            echo "CMAKE_PREFIX_PATH=/opt/Qt" >> $GITHUB_ENV
+          fi
+
+      - name: Debug - Print Qt/CMake Info
+        run: |
+          echo "Qt6 qmake version:"
+          qmake6 --version || echo "qmake6 not found"
+          echo "Qt6 installation check:"
+          ls -la /usr/lib/x86_64-linux-gnu/qt6 2>/dev/null || ls -la /usr/lib/qt6 2>/dev/null || echo "Qt6 directory not found in standard locations"
+          echo "CMake version:"
+          cmake --version
+          echo "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH:-not set}"
 
       - name: Configure (Release)
-        run: cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}"
 
       - name: Build (Release)
         run: cmake --build build-release --parallel
@@ -27,7 +47,7 @@ jobs:
         run: ctest --test-dir build-release --output-on-failure
 
       - name: Configure (Lint)
-        run: cmake -B build-lint -S . -DCMAKE_BUILD_TYPE=Debug -DENABLE_LINT=ON
+        run: cmake -S . -B build-lint -DCMAKE_BUILD_TYPE=Debug -DENABLE_LINT=ON -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}"
 
       - name: Static Analysis (clang-tidy)
         run: cmake --build build-lint --parallel

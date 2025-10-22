@@ -2,16 +2,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 set(CMAKE_AUTOMOC ON)
 
-qt_add_qml_module(HueSyncStudio
-    URI "HueSyncStudio.ui"
-    VERSION "1.0"
-    QML_FILES
-        ui/AppWindow.qml
-        ui/AudioView.qml
-        ui/EffectPanel.qml
-        ui/LampMap.qml
-)
-
 add_executable(HueSyncStudio
     main.cpp
     core/Logger.cpp
@@ -31,10 +21,19 @@ add_executable(HueSyncStudio
     core/WebSocketServer.cpp
 )
 
+qt_add_qml_module(HueSyncStudio
+    URI "HueSyncStudio.ui"
+    VERSION "1.0"
+    QML_FILES
+        ui/AppWindow.qml
+        ui/AudioView.qml
+        ui/EffectPanel.qml
+        ui/LampMap.qml
+)
+
 target_include_directories(HueSyncStudio PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}"
 )
-
 
 target_link_libraries(HueSyncStudio PRIVATE
     spdlog::spdlog

@@ -10,8 +10,15 @@
 #include "Lamp.h"
 #include "effects/Effect.h"
 
-class LampGroupManager; // Forward declaration
+class LampGroupManager;
 
+/**
+ * @class HueBridge
+ * @brief Manages communication with a Philips Hue Bridge.
+ *
+ * Handles REST API authentication, entertainment group discovery,
+ * and DTLS streaming for Entertainment API v2.
+ */
 class HueBridge : public QObject {
     Q_OBJECT
 
@@ -28,30 +35,15 @@ public:
     void authenticate();
     void startStreaming(const QString& entertainmentGroupId);
 
-    // Command methods
     void sendRestCommand(int lightId, bool on, int brightness, const QColor& color);
     void sendDtlsStream(const LightStateMap& state);
 
     const QMap<QString, QString>& getEntertainmentGroups() const;
-    // Placeholder command methods
-    void sendRestCommand(int lightId, bool on, int brightness);
-    void sendDtlsStream(const QByteArray& data);
-
 
 signals:
     void authenticated(const QString& apiKey);
     void authenticationFailed(const QString& error);
     void entertainmentGroupsFound();
-    void entertainmentGroupsFound(); // To notify when setup is complete
-    explicit HueBridge(const QString& ipAddress, QObject* parent = nullptr);
-
-    void authenticate();
-    // Pass entertainment group ID to start streaming for that group
-    void startStreaming(const QString& entertainmentGroupId);
-
-signals:
-    void authenticated(const QString& apiKey);
-    void authenticationFailed(const QString& error);
     void streamingStarted();
     void streamingFailed(const QString& error);
 
@@ -75,20 +67,6 @@ private:
     QTimer* m_authTimer;
     QSslSocket* m_dtlsSocket;
     uint8_t m_sequenceId = 1;
-
-    QMap<QString, QString> m_entertainmentGroups; // ID -> Name
-    QString m_ipAddress; // Also used as a unique ID for the bridge
-    QString m_apiKey;
-    QString m_clientKey; // The PSK for DTLS
-    LampGroupManager& m_lampManager;
-
-
-private:
-    void setupDtlSocket(const QString& psk, const QString& pskIdentity);
-
-    QString m_ipAddress;
-    QString m_apiKey;
-    QNetworkAccessManager* m_networkManager;
-    QTimer* m_authTimer;
-    QSslSocket* m_dtlsSocket;
+    QMap<QString, QString> m_entertainmentGroups;
 };
+

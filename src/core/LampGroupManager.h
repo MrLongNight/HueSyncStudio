@@ -26,6 +26,8 @@ public:
     // Command sending logic, called by EffectEngine
     void sendSingleRestCommand(int lampId, bool on, int brightness, const QColor& color);
     void sendGroupDtlsStream(const QMap<QString, LightStateMap>& bridgeStates);
+    // Command sending logic
+    void sendGroupRestCommand(const QString& groupName, bool on, int brightness);
 
     const QMap<int, Lamp>& getAllLamps() const;
     const LogicalGroup& getGroup(const QString& groupName) const;

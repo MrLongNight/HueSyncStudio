@@ -63,6 +63,7 @@ void LampGroupManager::sendGroupRestCommand(const QString& groupName, bool on, i
         const Lamp& lamp = m_allLamps[lampId];
         if (m_bridges.contains(lamp.bridgeId)) {
             m_bridges[lamp.bridgeId]->sendRestCommand(lamp.id, on, brightness, QColor()); // No specific color
+            m_bridges[lamp.bridgeId]->sendRestCommand(lamp.id, on, brightness);
         } else {
             Logger::get()->error("Could not send command to lamp {}: Bridge {} not registered.", lamp.id, lamp.bridgeId.toStdString());
         }

@@ -1,0 +1,49 @@
+name: Build & Test (HueSyncStudio)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libgl1-mesa-dev pkg-config
+
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: Update vcpkg registry
+        run: ./vcpkg/vcpkg update
+
+      - name: Install dependencies (Manifest Mode)
+        run: ./vcpkg/vcpkg install
+
+      - name: Configure (Release)
+        run: >
+          cmake -B build-release -S .
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build (Release)
+        run: cmake --build build-release --parallel
+
+      - name: Run Tests
+        run: ctest --test-dir build-release --output-on-failure
+
+      - name: Configure (Lint)
+        run: >
+          cmake -B build-lint -S .
+          -DCMAKE_BUILD_TYPE=Debug
+          -DENABLE_LINT=ON
+          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Static Analysis (clang-tidy)
+        run: cmake --build build-lint --parallel

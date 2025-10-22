@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
+find_package(Qt6 COMPONENTS Core Network WebSockets REQUIRED)
 find_package(Qt6 COMPONENTS Core Network REQUIRED)
 # --- Build Improvements ---
 set(CMAKE_CXX_STANDARD 17)

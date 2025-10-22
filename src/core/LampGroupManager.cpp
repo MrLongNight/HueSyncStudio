@@ -50,6 +50,12 @@ void LampGroupManager::addLampToGroup(const QString& groupName, int lampId) {
     }
 }
 
+void LampGroupManager::clearGroups() {
+    m_logicalGroups.clear();
+    // Also re-create the default "All" group
+    createGroup("All");
+}
+
 void LampGroupManager::sendGroupRestCommand(const QString& groupName, bool on, int brightness) {
     if (!m_logicalGroups.contains(groupName)) {
         Logger::get()->error("Cannot send command to non-existent group '{}'", groupName.toStdString());
@@ -96,4 +102,8 @@ const QMap<int, Lamp>& LampGroupManager::getAllLamps() const {
 
 const LogicalGroup& LampGroupManager::getGroup(const QString& groupName) const {
     return m_logicalGroups[groupName];
+}
+
+const QMap<QString, LogicalGroup>& LampGroupManager::getAllLogicalGroups() const {
+    return m_logicalGroups;
 }

@@ -13,6 +13,9 @@ class MultiBridgeManager : public QObject {
 
 public:
     explicit MultiBridgeManager(LampGroupManager& lampManager, QObject* parent = nullptr);
+
+    void discoverBridges();
+    void addManualBridge(const QString& ip, const QString& apiKey, const QString& clientKey);
     explicit MultiBridgeManager(QObject* parent = nullptr);
 
     void discoverBridges();

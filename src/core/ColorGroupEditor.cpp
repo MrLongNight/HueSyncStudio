@@ -30,12 +30,20 @@ void ColorGroupEditor::addColorToPalette(const QString& name, const QColor& colo
     m_palettes[name].append(color);
 }
 
+void ColorGroupEditor::clearPalettes() {
+    m_palettes.clear();
+}
+
 const ColorPalette& ColorGroupEditor::getPalette(const QString& name) const {
     if (m_palettes.contains(name)) {
         return m_palettes[name];
     }
     Logger::get()->error("Palette '{}' not found.", name.toStdString());
     return m_emptyPalette;
+}
+
+const QMap<QString, ColorPalette>& ColorGroupEditor::getAllPalettes() const {
+    return m_palettes;
 }
 
 QColor ColorGroupEditor::getColorFromPalette(const QString& name, double index) const {

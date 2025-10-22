@@ -27,6 +27,8 @@ add_executable(HueSyncStudio
     core/effects/PulseEffect.cpp
     core/effects/SpectrumEffect.cpp
     core/effects/ColorFlowEffect.cpp
+    core/PresetManager.cpp
+    core/WebSocketServer.cpp
 )
 
 target_include_directories(HueSyncStudio PUBLIC
@@ -49,6 +51,7 @@ target_link_libraries(HueSyncStudio PRIVATE
     kissfft
     rtaudio
     Qt6::Network
+    Qt6::WebSockets
     Qt6::Core
     Qt6::Gui
     Qt6::Qml

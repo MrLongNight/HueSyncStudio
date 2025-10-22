@@ -32,6 +32,22 @@ const QString& HueBridge::getId() const {
     return m_ipAddress;
 }
 
+const QString& HueBridge::getApiKey() const {
+    return m_apiKey;
+}
+
+const QString& HueBridge::getClientKey() const {
+    return m_clientKey;
+}
+
+void HueBridge::setApiKey(const QString& key) {
+    m_apiKey = key;
+}
+
+void HueBridge::setClientKey(const QString& key) {
+    m_clientKey = key;
+}
+
 void HueBridge::authenticate() {
     Logger::get()->info("Starting authentication for bridge at {}. Please press the link button.", m_ipAddress.toStdString());
     m_authTimer->start(2000);

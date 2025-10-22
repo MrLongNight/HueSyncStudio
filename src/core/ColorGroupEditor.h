@@ -16,6 +16,9 @@ public:
 
     void createPalette(const QString& name);
     void addColorToPalette(const QString& name, const QColor& color);
+    void clearPalettes();
+    const ColorPalette& getPalette(const QString& name) const;
+    const QMap<QString, ColorPalette>& getAllPalettes() const;
     const ColorPalette& getPalette(const QString& name) const;
 
     // The core logic methods will be added in subsequent steps

@@ -19,6 +19,12 @@ public:
     explicit HueBridge(const QString& ipAddress, LampGroupManager& lampManager, QObject* parent = nullptr);
 
     const QString& getId() const;
+    const QString& getApiKey() const;
+    const QString& getClientKey() const;
+
+    void setApiKey(const QString& key);
+    void setClientKey(const QString& key);
+
     void authenticate();
     void startStreaming(const QString& entertainmentGroupId);
 

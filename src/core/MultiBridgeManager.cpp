@@ -22,6 +22,19 @@ void MultiBridgeManager::discoverBridges() {
     m_networkManager->get(request);
 }
 
+void MultiBridgeManager::addManualBridge(const QString& ip, const QString& apiKey, const QString& clientKey) {
+    Logger::get()->info("Adding manually configured bridge at IP: {}", ip.toStdString());
+    HueBridge* bridge = new HueBridge(ip, m_lampManager, this);
+    bridge->setApiKey(apiKey);
+    bridge->setClientKey(clientKey);
+
+    m_bridges.append(bridge);
+    m_lampManager.registerBridge(bridge);
+
+    // Since it's authenticated, directly fetch groups
+    QMetaObject::invokeMethod(bridge, "fetchEntertainmentGroups", Qt::QueuedConnection);
+}
+
 void MultiBridgeManager::onDiscoveryFinished(QNetworkReply* reply) {
     if (reply->error()) {
         Logger::get()->error("Bridge discovery failed: {}", reply->errorString().toStdString());

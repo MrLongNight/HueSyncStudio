@@ -1,0 +1,31 @@
+name: Build & Test (HueSyncStudio)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive' # Ensure submodules are checked out
+
+      - name: Install Dependencies
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libgl1-mesa-dev
+
+      - name: Configure (Release)
+        run: cmake -B build-release -S . -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build (Release)
+        run: cmake --build build-release --parallel
+
+      - name: Run Tests
+        run: ctest --test-dir build-release --output-on-failure
+
+      - name: Configure (Lint)
+        run: cmake -B build-lint -S . -DCMAKE_BUILD_TYPE=Debug -DENABLE_LINT=ON
+
+      - name: Static Analysis (clang-tidy)
+        run: cmake --build build-lint --parallel

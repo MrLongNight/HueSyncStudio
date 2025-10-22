@@ -3,6 +3,11 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 set(CMAKE_AUTOMOC ON)
 
 qt_add_qml_module(HueSyncStudio
+# This function automatically creates a resource file from the QML files
+# and links it to the specified target.
+qt_add_qml_module(HueSyncStudio
+qt_add_qml_module(HueSyncStudio
+    URI "HueSyncStudio"
     TARGET HueSyncStudio
     URI "HueSyncStudio.ui"
     VERSION "1.0"
@@ -20,6 +25,16 @@ add_executable(HueSyncStudio
     core/AudioAnalyzer.cpp
     ui/AudioDataModel.cpp
     ui/LampModel.cpp
+    core/HueBridge.cpp
+    core/MultiBridgeManager.cpp
+    core/LampGroupManager.cpp
+    core/ColorGroupEditor.cpp
+    core/EffectEngine.cpp
+    core/effects/PulseEffect.cpp
+    core/effects/SpectrumEffect.cpp
+    core/effects/ColorFlowEffect.cpp
+    core/PresetManager.cpp
+    core/WebSocketServer.cpp
 )
 
 target_include_directories(HueSyncStudio PUBLIC
@@ -28,6 +43,12 @@ target_include_directories(HueSyncStudio PUBLIC
 
 target_include_directories(HueSyncStudio PUBLIC
     "${CMAKE_SOURCE_DIR}/libs/kissfft"
+    ui/AudioDataModel.cpp
+    ui/LampModel.cpp
+)
+
+target_include_directories(HueSyncStudio PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}" # For core/ and ui/
 )
 
 target_link_libraries(HueSyncStudio PRIVATE
@@ -35,6 +56,8 @@ target_link_libraries(HueSyncStudio PRIVATE
     nlohmann_json::nlohmann_json
     kissfft
     rtaudio
+    Qt6::Network
+    Qt6::WebSockets
     Qt6::Core
     Qt6::Gui
     Qt6::Qml

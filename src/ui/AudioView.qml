@@ -4,6 +4,9 @@ import QtQuick.Controls
 Pane {
     id: root
 
+    Label {
+        text: "Live FFT Viewer"
+        anchors.centerIn: parent
     // Simple Mode Implementation
     Row {
         anchors.fill: parent

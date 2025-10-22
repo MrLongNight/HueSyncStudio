@@ -5,6 +5,15 @@
 #include <QSet>
 #include "../core/Lamp.h"
 
+/**
+ * @class LampModel
+ * @brief Manages a list of Lamp objects and exposes them to the QML frontend.
+ *
+ * This class inherits from QAbstractListModel to provide a data model that can be
+ * used by QML views (like Repeater or ListView). It manages a list of lamps
+ * and exposes their properties (ID, name, position) through roles. It also provides
+ * an invokable method to update lamp positions from the UI.
+ */
 class LampModel : public QAbstractListModel
 {
     Q_OBJECT

@@ -55,7 +55,6 @@ void HueBridge::pollForAuthentication() {
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QJsonObject requestBody;
     requestBody["devicetype"] = "HueSyncStudio#windows";
-    requestBody["generateclientkey"] = true;
     requestBody["generateclientkey"] = true; // Request a client key for DTLS
     QNetworkReply* reply = m_networkManager->post(request, QJsonDocument(requestBody).toJson());
     connect(reply, &QNetworkReply::finished, this, [this, reply]() { onAuthenticationReply(reply); });
@@ -64,10 +63,21 @@ void HueBridge::pollForAuthentication() {
 void HueBridge::onAuthenticationReply(QNetworkReply* reply) {
     if (reply->error() && reply->error() != QNetworkReply::ProtocolInvalidOperationError) {
         Logger::get()->error("Authentication network error: {}", reply->errorString().toStdString());
+        reply->deleteLater();
+        return;
     }
+
     const QByteArray data = reply->readAll();
     const QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
+
+    if (!jsonDoc.isArray()) {
+        Logger::get()->error("Unexpected authentication reply format from bridge {}", m_ipAddress.toStdString());
+        reply->deleteLater();
+        return;
+    }
+
     const QJsonObject responseObj = jsonDoc.array().first().toObject();
+
     if (responseObj.contains("success")) {
         QJsonObject successObj = responseObj["success"].toObject();
         m_apiKey = successObj["username"].toString();
@@ -76,14 +86,10 @@ void HueBridge::onAuthenticationReply(QNetworkReply* reply) {
         Logger::get()->info("Successfully authenticated with bridge {}. API Key acquired.", m_ipAddress.toStdString());
         emit authenticated(m_apiKey);
         fetchEntertainmentGroups();
-        fetchEntertainmentGroups(); // Fetch groups right after auth
-        m_apiKey = responseObj["success"].toObject()["username"].toString();
-        m_authTimer->stop();
-        Logger::get()->info("Successfully authenticated with bridge {}. API Key: {}", m_ipAddress.toStdString(), m_apiKey.toStdString());
-        emit authenticated(m_apiKey);
     } else if (responseObj.contains("error")) {
         int errorType = responseObj["error"].toObject()["type"].toInt();
         if (errorType == 101) {
+            // Link button not pressed yet -- keep polling
             Logger::get()->trace("Link button not pressed on bridge {}. Polling again...", m_ipAddress.toStdString());
         } else {
             QString errorDescription = responseObj["error"].toObject()["description"].toString();
@@ -92,6 +98,7 @@ void HueBridge::onAuthenticationReply(QNetworkReply* reply) {
             emit authenticationFailed(errorDescription);
         }
     }
+
     reply->deleteLater();
 }
 
@@ -109,10 +116,18 @@ void HueBridge::onFetchGroupsReply(QNetworkReply* reply) {
         reply->deleteLater();
         return;
     }
+
     const QByteArray data = reply->readAll();
     const QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
+    if (!jsonDoc.isObject()) {
+        Logger::get()->error("Unexpected groups reply format from bridge {}", m_ipAddress.toStdString());
+        reply->deleteLater();
+        return;
+    }
+
     const QJsonObject groupsObj = jsonDoc.object();
     m_entertainmentGroups.clear();
+
     for (auto it = groupsObj.begin(); it != groupsObj.end(); ++it) {
         const QJsonObject group = it.value().toObject();
         if (group["type"].toString() == "Entertainment") {
@@ -120,11 +135,7 @@ void HueBridge::onFetchGroupsReply(QNetworkReply* reply) {
             QString groupName = group["name"].toString();
             m_entertainmentGroups[groupId] = groupName;
             Logger::get()->info("Found entertainment group: {} (ID: {})", groupName.toStdString(), groupId.toStdString());
-    for (auto it = groupsObj.begin(); it != groupsObj.end(); ++it) {
-        const QJsonObject group = it.value().toObject();
-        if (group["type"].toString() == "Entertainment") {
-            QString groupName = group["name"].toString();
-            Logger::get()->info("Found entertainment group: {}", groupName.toStdString());
+
             const QJsonObject locations = group["locations"].toObject();
             const QJsonArray lightIds = group["lights"].toArray();
             for (const QJsonValue& lightIdValue : lightIds) {
@@ -134,9 +145,9 @@ void HueBridge::onFetchGroupsReply(QNetworkReply* reply) {
                 lamp.name = QString("Light %1").arg(lamp.id);
                 if (locations.contains(lightIdStr)) {
                     QJsonArray pos = locations[lightIdStr].toArray();
-                    lamp.x = pos[0].toDouble();
-                    lamp.y = pos[1].toDouble();
-                    lamp.z = pos[2].toDouble();
+                    lamp.x = pos.size() > 0 ? pos[0].toDouble() : 0.0;
+                    lamp.y = pos.size() > 1 ? pos[1].toDouble() : 0.0;
+                    lamp.z = pos.size() > 2 ? pos[2].toDouble() : 0.0;
                 } else {
                     lamp.x = lamp.y = lamp.z = 0.0;
                     Logger::get()->warn("Location not found for light ID {} in group {}", lamp.id, groupName.toStdString());
@@ -146,6 +157,7 @@ void HueBridge::onFetchGroupsReply(QNetworkReply* reply) {
             }
         }
     }
+
     emit entertainmentGroupsFound();
     reply->deleteLater();
 }
@@ -178,43 +190,37 @@ void HueBridge::onEnableStreamingReply(QNetworkReply* reply) {
         reply->deleteLater();
         return;
     }
-    setupDtlSocket(m_clientKey, m_apiKey);
-    Logger::get()->info("Streaming mode enabled. Setting up DTLS socket.");
-    setupDtlSocket(m_clientKey, m_apiKey); // Use the real client key and API key (username)
 
-    // Hue API V1 returns credentials in the response to the PUT request. V2 requires a separate fetch.
-    // This implementation assumes V2 credentials (PSK) are already known from the entertainment group setup.
-    // For this TG, we'll assume we have the PSK and identity. A later TG would fetch them.
-    QString pskIdentity = "HueSyncStudioPSK"; // Placeholder, must be 1-32 chars
-    QString psk = "deadbeefdeadbeefdeadbeefdeadbeef"; // Placeholder, must be a 32-char hex string
+    // Assuming the client key / PSK have been set earlier during authentication
+    // Setup DTLS socket with the known PSK and identity
+    QString pskIdentity = m_apiKey.isEmpty() ? QStringLiteral("HueSyncStudioPSK") : m_apiKey;
+    QString psk = m_clientKey.isEmpty() ? QStringLiteral("deadbeefdeadbeefdeadbeefdeadbeef") : m_clientKey;
 
     Logger::get()->info("Streaming mode enabled. Setting up DTLS socket.");
     setupDtlSocket(psk, pskIdentity);
+
     reply->deleteLater();
 }
 
 void HueBridge::setupDtlSocket(const QString& psk, const QString& pskIdentity) {
+    if (m_dtlsSocket) {
+        m_dtlsSocket->deleteLater();
+        m_dtlsSocket = nullptr;
+    }
+
     m_dtlsSocket = new QSslSocket(this);
     connect(m_dtlsSocket, &QSslSocket::connected, this, &HueBridge::onSocketConnected);
     connect(m_dtlsSocket, &QSslSocket::sslErrors, this, &HueBridge::onSocketSslErrors);
-    QSslConfiguration sslConfig = QSslConfiguration::defaultDtlsConfiguration();
-    sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
-    QSslPresharedKeyAuthenticator authenticator;
-    authenticator.setIdentity(pskIdentity.toUtf8());
-    authenticator.setPreSharedKey(QByteArray::fromHex(psk.toLatin1()));
-    m_dtlsSocket->setDtlsPresharedKeyAuthenticator(authenticator);
-    m_dtlsSocket->setSslConfiguration(sslConfig);
 
     QSslConfiguration sslConfig = QSslConfiguration::defaultDtlsConfiguration();
     sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone); // Hue bridge uses self-signed cert
 
     // Convert PSK from hex string to byte array
     QByteArray pskBytes = QByteArray::fromHex(psk.toLatin1());
+
     QSslPresharedKeyAuthenticator authenticator;
     authenticator.setIdentity(pskIdentity.toUtf8());
     authenticator.setPreSharedKey(pskBytes);
-    m_dtlsSocket->setDtlsPresharedKeyAuthenticator(authenticator);
-    m_dtlsSocket->setSslConfiguration(sslConfig);
 
     m_dtlsSocket->setDtlsPresharedKeyAuthenticator(authenticator);
     m_dtlsSocket->setSslConfiguration(sslConfig);
@@ -246,8 +252,6 @@ void HueBridge::sendRestCommand(int lightId, bool on, int brightness, const QCol
     state["on"] = on;
     if (on) {
         state["bri"] = brightness;
-        // Convert color to XY space for better accuracy (simplified for now)
-        // For simplicity, we'll use HSV for now, though it's less accurate.
         if (color.isValid()) {
             state["hue"] = static_cast<int>(color.hueF() * 65535);
             state["sat"] = static_cast<int>(color.saturationF() * 254);
@@ -255,7 +259,6 @@ void HueBridge::sendRestCommand(int lightId, bool on, int brightness, const QCol
     }
 
     m_networkManager->put(request, QJsonDocument(state).toJson());
-    // Note: We don't handle the reply for REST commands to keep it fast (fire and forget)
 }
 
 void HueBridge::sendDtlsStream(const LightStateMap& state) {
@@ -276,7 +279,7 @@ void HueBridge::sendDtlsStream(const LightStateMap& state) {
 
     // Light data
     for (auto it = state.begin(); it != state.end(); ++it) {
-        uint8_t lightId = it.key();
+        uint8_t lightId = static_cast<uint8_t>(it.key());
         QColor color = it.value();
 
         stream << (uint8_t)0x00 << lightId; // Type 0 (light ID)
@@ -287,4 +290,3 @@ void HueBridge::sendDtlsStream(const LightStateMap& state) {
 
     m_dtlsSocket->write(message);
 }
-

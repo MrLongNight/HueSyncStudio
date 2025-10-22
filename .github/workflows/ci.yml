@@ -27,6 +27,9 @@ jobs:
             echo "CMAKE_PREFIX_PATH=/opt/Qt" >> $GITHUB_ENV
           fi
 
+- name: Install spdlog
+  run: sudo apt-get update && sudo apt-get install -y libspdlog-dev
+
       - name: Debug - Print Qt/CMake Info
         run: |
           echo "Qt6 qmake version:"

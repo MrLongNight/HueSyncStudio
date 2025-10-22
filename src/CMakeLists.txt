@@ -21,6 +21,7 @@ add_executable(HueSyncStudio
     core/HueBridge.cpp
     core/MultiBridgeManager.cpp
     core/LampGroupManager.cpp
+    core/ColorGroupEditor.cpp
 )
 
 target_include_directories(HueSyncStudio PUBLIC

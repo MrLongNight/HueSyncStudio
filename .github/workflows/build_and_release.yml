@@ -1,4 +1,4 @@
-name: Build and Release
+        name: Build and Release
 
 on:
   workflow_dispatch:
@@ -14,31 +14,56 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # vollständige Historie für Releases/Tags
 
       - name: Setup vcpkg
         run: |
-          git clone https://github.com/microsoft/vcpkg.git vcpkg
+          git clone https://github.com/microsoft/vcpkg.git vcpkg --depth 1
           .\vcpkg\bootstrap-vcpkg.bat
+
+      - name: Cache vcpkg artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            vcpkg/installed
+            vcpkg/downloads
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
 
       - name: Install dependencies
         run: |
           .\vcpkg\vcpkg.exe install qtbase qtwebsockets spdlog nlohmann-json catch2 rtaudio --recurse
+        shell: pwsh
 
       - name: Configure CMake
-        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake -DBUILD_TESTING=ON
+        run: |
+          cmake -B build -S . ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake ^
+            -DBUILD_TESTING=ON ^
+            -DVCPKG_TARGET_TRIPLET=x64-windows
+        shell: pwsh
 
       - name: Build project
-        run: cmake --build build --config Release
+        run: |
+          cmake --build build --config Release --parallel
+        shell: pwsh
 
       - name: Run tests
-        run: ctest --test-dir build --output-on-failure
+        run: |
+          ctest --test-dir build --output-on-failure
+        shell: pwsh
 
       - name: Package artifacts
-        run: cmake --build build --config Release --target package || true
+        run: |
+          cmake --build build --config Release --target package || true
+        shell: pwsh
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
           files: build/*.zip
           tag_name: v${{ github.run_number }}
-          name: HueSyncStudio Release ${{ github.run_number }}
+          name: HueSyncStudio Release ${{ github.run_number }} 

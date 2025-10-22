@@ -8,6 +8,13 @@
 
 using ColorPalette = QList<QColor>;
 
+/**
+ * @class ColorGroupEditor
+ * @brief Manages color palettes and color deviation for effects.
+ *
+ * Allows creation and management of named color palettes,
+ * and provides utility functions for color manipulation.
+ */
 class ColorGroupEditor : public QObject {
     Q_OBJECT
 
@@ -19,13 +26,12 @@ public:
     void clearPalettes();
     const ColorPalette& getPalette(const QString& name) const;
     const QMap<QString, ColorPalette>& getAllPalettes() const;
-    const ColorPalette& getPalette(const QString& name) const;
 
-    // The core logic methods will be added in subsequent steps
     QColor getColorFromPalette(const QString& name, double index) const;
     QColor getDeviatedColor(const QColor& color, double deviation) const;
 
 private:
     QMap<QString, ColorPalette> m_palettes;
-    static const ColorPalette m_emptyPalette; // For safe return on not found
+    static const ColorPalette m_emptyPalette;
 };
+

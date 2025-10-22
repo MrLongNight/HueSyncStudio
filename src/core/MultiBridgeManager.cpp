@@ -8,9 +8,6 @@
 
 MultiBridgeManager::MultiBridgeManager(LampGroupManager& lampManager, QObject* parent)
     : QObject(parent), m_lampManager(lampManager) {
-    m_networkManager = new QNetworkManager(this);
-    connect(m_networkManager, &QNetworkManager::finished, this, &MultiBridgeManager::onDiscoveryFinished);
-MultiBridgeManager::MultiBridgeManager(QObject* parent) : QObject(parent) {
     m_networkManager = new QNetworkAccessManager(this);
     connect(m_networkManager, &QNetworkAccessManager::finished, this, &MultiBridgeManager::onDiscoveryFinished);
 }

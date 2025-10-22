@@ -27,9 +27,9 @@ int main(int argc, char *argv[]) {
     LampModel lampModel(&app);
 
     // Add mock lamp data for testing
-    lampModel.addLamp({1, "Lightstrip", 50.0, 50.0, 0.0});
-    lampModel.addLamp({2, "Play Bar 1", 150.0, 100.0, 0.0});
-    lampModel.addLamp({3, "Play Bar 2", 250.0, 150.0, 0.0});
+    lampModel.addLamp({1, "Lightstrip", 50.0, 50.0, 0.0, ""});
+    lampModel.addLamp({2, "Play Bar 1", 150.0, 100.0, 0.0, ""});
+    lampModel.addLamp({3, "Play Bar 2", 250.0, 150.0, 0.0, ""});
 
     QObject::connect(&analyzer, &AudioAnalyzer::bandsUpdated,
                      &audioDataModel, [&](const AudioBand& bands) {

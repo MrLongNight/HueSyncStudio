@@ -1,0 +1,12 @@
+{
+  "name": "huesyncstudio",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "qt6-base",
+    "spdlog",
+    "nlohmann-json",
+    "catch2",
+    "rtaudio",
+    "qt6-network"
+  ]
+}

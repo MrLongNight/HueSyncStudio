@@ -19,6 +19,7 @@ add_executable(HueSyncStudio
     core/Logger.cpp
     core/ConfigManager.cpp
     core/AudioAnalyzer.cpp
+    ui/AudioDataModel.cpp
     core/HueBridge.cpp
     core/MultiBridgeManager.cpp
     core/LampGroupManager.cpp
@@ -32,7 +33,7 @@ add_executable(HueSyncStudio
 )
 
 target_include_directories(HueSyncStudio PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}/core"
+    "${CMAKE_CURRENT_SOURCE_DIR}" # For core/ and ui/
 )
 
 target_include_directories(HueSyncStudio PUBLIC

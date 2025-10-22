@@ -1,5 +1,13 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include <QUrl>
+#include "core/Logger.h"
+#include "core/ConfigManager.h"
+#include "core/AudioAnalyzer.h"
+#include "ui/AudioDataModel.h"
+
+int main(int argc, char *argv[]) {
 #include <QUrl>
 #include "core/Logger.h"
 #include "core/ConfigManager.h"
@@ -58,7 +66,7 @@ int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
 
     Logger::init();
-    Logger::get()->info("Welcome to HueSyncStudio!");
+    Logger::get()->info("Starting HueSyncStudio GUI...");
 
     ConfigManager config("resources/default_config.json");
     if (!config.load()) {
@@ -104,6 +112,24 @@ int main(int argc, char *argv[]) {
 
     QGuiApplication app(argc, argv);
 
+    // --- C++ / QML Integration ---
+    AudioAnalyzer analyzer(config, &app);
+    AudioDataModel audioDataModel(&app);
+
+    // Connect the analyzer's signal to the model's setters
+    QObject::connect(&analyzer, &AudioAnalyzer::bandsUpdated,
+                     &audioDataModel, [&](const AudioBand& bands) {
+        audioDataModel.setLowBandEnergy(bands.low);
+        audioDataModel.setMidBandEnergy(bands.mid);
+        audioDataModel.setHighBandEnergy(bands.high);
+    });
+
+    QQmlApplicationEngine engine;
+
+    // Expose the C++ model to QML
+    engine.rootContext()->setContextProperty("audioDataModel", &audioDataModel);
+
+    const QUrl url(QStringLiteral("qrc:/HueSyncStudio.ui/AppWindow.qml"));
     QQmlApplicationEngine engine;
     // The path must be relative to the resource system root
     const QUrl url(QStringLiteral("qrc:/ui/AppWindow.qml"));
@@ -117,6 +143,16 @@ int main(int argc, char *argv[]) {
     }, Qt::QueuedConnection);
 
     engine.load(url);
+
+    // --- Start Application Logic ---
+    if (!analyzer.startStream()) {
+        Logger::get()->error("Failed to start audio stream.");
+    }
+
+    int execResult = app.exec();
+
+    // Cleanly stop the audio stream when the application quits
+    analyzer.stopStream();
 
     return app.exec();
     AudioAnalyzer analyzer(config);

@@ -2,23 +2,37 @@
 #include "Logger.h"
 #include <cmath>
 #include <numeric>
+#include <algorithm> // For std::max
 
-AudioAnalyzer::AudioAnalyzer(ConfigManager& config)
-    : m_config(config),
+AudioAnalyzer::AudioAnalyzer(ConfigManager& config, QObject* parent)
+    : QObject(parent),
+      m_config(config),
       m_bufferFrames(1024),
       m_sampleRate(44100),
       m_fftConfig(nullptr)
 {
-    // Load band settings from config
+    // Register AudioBand to be usable in Qt's meta-object system (e.g., for signals/slots)
+    qRegisterMetaType<AudioBand>();
+
+    // Load audio settings from config with defaults
     try {
-        m_lowBandEnd = m_config.get()["audio"]["bands"]["low"]["end"];
-        m_midBandEnd = m_config.get()["audio"]["bands"]["mid"]["end"];
-        m_highBandEnd = m_config.get()["audio"]["bands"]["high"]["end"];
+        const auto& audioConfig = m_config.get()["audio"];
+        m_lowBandStart = audioConfig["bands"]["low"]["start"];
+        m_lowBandEnd = audioConfig["bands"]["low"]["end"];
+        m_midBandStart = audioConfig["bands"]["mid"]["start"];
+        m_midBandEnd = audioConfig["bands"]["mid"]["end"];
+        m_highBandStart = audioConfig["bands"]["high"]["start"];
+        m_highBandEnd = audioConfig["bands"]["high"]["end"];
+        m_decayFactor = audioConfig["decay"];
     } catch (const nlohmann::json::exception& e) {
-        Logger::get()->error("Failed to read audio bands from config: {}. Using defaults.", e.what());
+        Logger::get()->error("Failed to read audio settings from config: {}. Using defaults.", e.what());
+        m_lowBandStart = 20.0;
         m_lowBandEnd = 250.0;
+        m_midBandStart = 250.0;
         m_midBandEnd = 2000.0;
+        m_highBandStart = 2000.0;
         m_highBandEnd = 20000.0;
+        m_decayFactor = 0.95;
     }
 
     if (m_audio.getDeviceCount() < 1) {
@@ -34,7 +48,6 @@ AudioAnalyzer::AudioAnalyzer(ConfigManager& config)
 
     m_fftOut.resize(m_bufferFrames);
     m_fftMag.resize(m_bufferFrames / 2 + 1);
-
     m_latestBands = {0.0, 0.0, 0.0};
 }
 
@@ -83,10 +96,8 @@ int AudioAnalyzer::audioCallback(void* outputBuffer, void* inputBuffer, unsigned
     if (status) {
         Logger::get()->warn("Stream overflow detected!");
     }
-
     AudioAnalyzer* analyzer = static_cast<AudioAnalyzer*>(userData);
     analyzer->processFFT(static_cast<double*>(inputBuffer));
-
     return 0;
 }
 
@@ -104,7 +115,7 @@ void AudioAnalyzer::processFFT(const double* buffer) {
     for (unsigned int i = 0; i < m_fftMag.size(); ++i) {
         double real = m_fftOut[i].r;
         double imag = m_fftOut[i].i;
-        m_fftMag[i] = std::sqrt(real * real + imag * imag);
+        m_fftMag[i] = 2.0 * std::sqrt(real * real + imag * imag) / m_bufferFrames; // Normalize
     }
 
     double lowSum = 0, midSum = 0, highSum = 0;
@@ -114,19 +125,25 @@ void AudioAnalyzer::processFFT(const double* buffer) {
 
     for (unsigned int i = 1; i < m_fftMag.size(); ++i) {
         double freq = i * freqResolution;
-        if (freq <= m_lowBandEnd) {
+        if (freq >= m_lowBandStart && freq < m_lowBandEnd) {
             lowSum += m_fftMag[i];
             lowCount++;
-        } else if (freq <= m_midBandEnd) {
+        } else if (freq >= m_midBandStart && freq < m_midBandEnd) {
             midSum += m_fftMag[i];
             midCount++;
-        } else if (freq <= m_highBandEnd) {
+        } else if (freq >= m_highBandStart && freq < m_highBandEnd) {
             highSum += m_fftMag[i];
             highCount++;
         }
     }
 
-    m_latestBands.low = (lowCount > 0) ? (lowSum / lowCount) : 0.0;
-    m_latestBands.mid = (midCount > 0) ? (midSum / midCount) : 0.0;
-    m_latestBands.high = (highCount > 0) ? (highSum / highCount) : 0.0;
+    double rawLow = (lowCount > 0) ? (lowSum / lowCount) : 0.0;
+    double rawMid = (midCount > 0) ? (midSum / midCount) : 0.0;
+    double rawHigh = (highCount > 0) ? (highSum / highCount) : 0.0;
+
+    m_latestBands.low = std::max(rawLow, m_latestBands.low * m_decayFactor);
+    m_latestBands.mid = std::max(rawMid, m_latestBands.mid * m_decayFactor);
+    m_latestBands.high = std::max(rawHigh, m_latestBands.high * m_decayFactor);
+
+    emit bandsUpdated(m_latestBands);
 }

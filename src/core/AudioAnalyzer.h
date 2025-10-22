@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QObject>
 #include <RtAudio.h>
 #include <vector>
 #include <string>
@@ -12,16 +13,23 @@ struct AudioBand {
     double mid;
     double high;
 };
+Q_DECLARE_METATYPE(AudioBand);
 
-class AudioAnalyzer {
+
+class AudioAnalyzer : public QObject {
+    Q_OBJECT
+
 public:
-    AudioAnalyzer(ConfigManager& config);
+    AudioAnalyzer(ConfigManager& config, QObject* parent = nullptr);
     ~AudioAnalyzer();
 
     bool startStream();
     void stopStream();
 
     AudioBand getFrequencyBands() const;
+
+signals:
+    void bandsUpdated(const AudioBand& bands);
 
 public:
     // Public for testing
@@ -42,8 +50,9 @@ private:
 
     mutable AudioBand m_latestBands;
 
-    // Band frequencies loaded from config
-    double m_lowBandEnd;
-    double m_midBandEnd;
-    double m_highBandEnd;
+    // --- Configuration values ---
+    double m_lowBandStart, m_lowBandEnd;
+    double m_midBandStart, m_midBandEnd;
+    double m_highBandStart, m_highBandEnd;
+    double m_decayFactor;
 };

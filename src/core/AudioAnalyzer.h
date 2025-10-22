@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QObject>
-#include <RtAudio.h>
+#include <rtaudio/RtAudio.h>
 #include <vector>
 #include <string>
 #include <kiss_fft.h>

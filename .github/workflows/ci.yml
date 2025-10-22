@@ -1,4 +1,6 @@
 name: Build & Test (HueSyncStudio)
+permissions:
+  contents: read
 
 on:
   push:

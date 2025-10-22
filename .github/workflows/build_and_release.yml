@@ -12,22 +12,30 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup vcpkg
         run: |
           git clone https://github.com/microsoft/vcpkg.git vcpkg
           .\vcpkg\bootstrap-vcpkg.bat
-      - - name: Install dependencies
-  run: |
-    .\vcpkg\vcpkg.exe install qtbase qtwebsockets spdlog nlohmann-json catch2 rtaudio
-      - name: Configure
+
+      - name: Install dependencies
+        run: |
+          .\vcpkg\vcpkg.exe install qtbase qtwebsockets spdlog nlohmann-json catch2 rtaudio --recurse
+
+      - name: Configure CMake
         run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake -DBUILD_TESTING=ON
-      - name: Build
+
+      - name: Build project
         run: cmake --build build --config Release
-      - name: Run Tests
+
+      - name: Run tests
         run: ctest --test-dir build --output-on-failure
+
       - name: Package artifacts
         run: cmake --build build --config Release --target package || true
+
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:

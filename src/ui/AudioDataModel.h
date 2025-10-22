@@ -3,6 +3,14 @@
 #include <QObject>
 #include <QColor>
 
+/**
+ * @class AudioDataModel
+ * @brief Provides real-time audio analysis data to the QML frontend.
+ *
+ * This class acts as a bridge between the C++ `AudioAnalyzer` and the QML user interface.
+ * It exposes the calculated energy for each frequency band as Q_PROPERTY members,
+ * making them available for data binding in QML.
+ */
 class AudioDataModel : public QObject
 {
     Q_OBJECT

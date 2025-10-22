@@ -12,20 +12,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: 'recursive' # Ensure submodules are checked out
+          submodules: 'recursive'
 
-      - name: Install Dependencies
-        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libgl1-mesa-dev qt6-base-dev qt6-base-dev-tools
+      - name: Install apt dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            libasound2-dev \
+            libgl1-mesa-dev \
+            qt6-base-dev \
+            qt6-base-dev-tools \
+            qt6-websockets-dev \
+            libspdlog-dev \
+            libnlohmann-json-dev
 
-- name: Init vcpkg submodules
-  run: git submodule update --init --recursive
-
-- name: Check for qt6-base port
-  run: |
-    if (!(Test-Path "vcpkg/ports/qt6-base")) {
-      Write-Error "qt6-base port not found in vcpkg/ports. Please ensure the submodule is initialized or add the port manually."
-      exit 1
-    }
+      - name: Init vcpkg submodules
+        run: git submodule update --init --recursive
 
       - name: Set Qt6 CMAKE_PREFIX_PATH
         run: |
@@ -37,9 +41,6 @@ jobs:
             echo "CMAKE_PREFIX_PATH=/opt/Qt" >> $GITHUB_ENV
           fi
 
-- name: Install spdlog
-  run: sudo apt-get update && sudo apt-get install -y libspdlog-dev
-
       - name: Debug - Print Qt/CMake Info
         run: |
           echo "Qt6 qmake version:"
@@ -49,7 +50,6 @@ jobs:
           echo "CMake version:"
           cmake --version
           echo "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH:-not set}"
-        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libgl1-mesa-dev qt6-websockets-dev
 
       - name: Configure (Release)
         run: cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}"

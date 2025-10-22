@@ -31,6 +31,11 @@ public:
     const QMap<int, Lamp>& getAllLamps() const;
     const LogicalGroup& getGroup(const QString& groupName) const;
     const QMap<QString, LogicalGroup>& getAllLogicalGroups() const;
+    // Command sending logic
+    void sendGroupRestCommand(const QString& groupName, bool on, int brightness);
+
+    const QMap<int, Lamp>& getAllLamps() const;
+    const LogicalGroup& getGroup(const QString& groupName) const;
 
 private:
     QMap<QString, HueBridge*> m_bridges; // Keyed by bridge ID (IP address)

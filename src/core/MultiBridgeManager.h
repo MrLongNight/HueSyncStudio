@@ -16,6 +16,9 @@ public:
 
     void discoverBridges();
     void addManualBridge(const QString& ip, const QString& apiKey, const QString& clientKey);
+    explicit MultiBridgeManager(QObject* parent = nullptr);
+
+    void discoverBridges();
     const QList<HueBridge*>& getBridges() const;
 
 signals:

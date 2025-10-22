@@ -19,6 +19,7 @@ public:
     void clearPalettes();
     const ColorPalette& getPalette(const QString& name) const;
     const QMap<QString, ColorPalette>& getAllPalettes() const;
+    const ColorPalette& getPalette(const QString& name) const;
 
     // The core logic methods will be added in subsequent steps
     QColor getColorFromPalette(const QString& name, double index) const;

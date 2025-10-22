@@ -1,0 +1,8 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/">
+    <file>AppWindow.qml</file>
+    <file>AudioView.qml</file>
+    <file>EffectPanel.qml</file>
+    <file>LampMap.qml</file>
+</qresource>
+</RCC>

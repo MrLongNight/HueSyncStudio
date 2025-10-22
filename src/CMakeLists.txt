@@ -3,6 +3,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 set(CMAKE_AUTOMOC ON)
 
 qt_add_qml_module(HueSyncStudio
+    URI "HueSyncStudio"
     TARGET HueSyncStudio
     URI "HueSyncStudio.ui"
     VERSION "1.0"

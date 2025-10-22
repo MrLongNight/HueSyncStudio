@@ -19,7 +19,7 @@ jobs:
           .\vcpkg\bootstrap-vcpkg.bat
       - name: Install dependencies
         run: |
-          .\vcpkg\vcpkg.exe install qtbase qt6-network qt6-websockets spdlog nlohmann-json catch2 rtaudio
+          .\vcpkg\vcpkg.exe install qtbase qtbase-network qtbase-websockets spdlog nlohmann-json catch2 rtaudio
       - name: Configure
         run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake -DBUILD_TESTING=ON
       - name: Build

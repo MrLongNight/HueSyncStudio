@@ -29,6 +29,15 @@ signals:
     void authenticated(const QString& apiKey);
     void authenticationFailed(const QString& error);
     void entertainmentGroupsFound(); // To notify when setup is complete
+    explicit HueBridge(const QString& ipAddress, QObject* parent = nullptr);
+
+    void authenticate();
+    // Pass entertainment group ID to start streaming for that group
+    void startStreaming(const QString& entertainmentGroupId);
+
+signals:
+    void authenticated(const QString& apiKey);
+    void authenticationFailed(const QString& error);
     void streamingStarted();
     void streamingFailed(const QString& error);
 
@@ -48,6 +57,13 @@ private:
     QString m_apiKey;
     QString m_clientKey; // The PSK for DTLS
     LampGroupManager& m_lampManager;
+
+
+private:
+    void setupDtlSocket(const QString& psk, const QString& pskIdentity);
+
+    QString m_ipAddress;
+    QString m_apiKey;
     QNetworkAccessManager* m_networkManager;
     QTimer* m_authTimer;
     QSslSocket* m_dtlsSocket;

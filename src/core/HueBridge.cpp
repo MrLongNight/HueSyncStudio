@@ -10,6 +10,8 @@
 
 HueBridge::HueBridge(const QString& ipAddress, LampGroupManager& lampManager, QObject* parent)
     : QObject(parent), m_ipAddress(ipAddress), m_lampManager(lampManager), m_dtlsSocket(nullptr) {
+HueBridge::HueBridge(const QString& ipAddress, QObject* parent)
+    : QObject(parent), m_ipAddress(ipAddress), m_dtlsSocket(nullptr) {
     m_networkManager = new QNetworkManager(this);
     m_authTimer = new QTimer(this);
     connect(m_authTimer, &QTimer::timeout, this, &HueBridge::pollForAuthentication);
@@ -50,6 +52,10 @@ void HueBridge::onAuthenticationReply(QNetworkReply* reply) {
         Logger::get()->info("Successfully authenticated with bridge {}. API Key acquired.", m_ipAddress.toStdString());
         emit authenticated(m_apiKey);
         fetchEntertainmentGroups(); // Fetch groups right after auth
+        m_apiKey = responseObj["success"].toObject()["username"].toString();
+        m_authTimer->stop();
+        Logger::get()->info("Successfully authenticated with bridge {}. API Key: {}", m_ipAddress.toStdString(), m_apiKey.toStdString());
+        emit authenticated(m_apiKey);
     } else if (responseObj.contains("error")) {
         int errorType = responseObj["error"].toObject()["type"].toInt();
         if (errorType == 101) {
@@ -121,10 +127,23 @@ void HueBridge::startStreaming(const QString& entertainmentGroupId) {
     const QUrl url(QString("http://%1/api/%2/groups/%3").arg(m_ipAddress, m_apiKey, entertainmentGroupId));
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+void HueBridge::startStreaming(const QString& entertainmentGroupId) {
+    if (m_apiKey.isEmpty()) {
+        Logger::get()->error("Cannot start streaming: Not authenticated.");
+        emit streamingFailed("Not authenticated.");
+        return;
+    }
+    Logger::get()->info("Enabling streaming mode for group {} on bridge {}", entertainmentGroupId.toStdString(), m_ipAddress.toStdString());
+
+    const QUrl url(QString("http://%1/api/%2/groups/%3").arg(m_ipAddress, m_apiKey, entertainmentGroupId));
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
     QJsonObject requestBody;
     QJsonObject streamObject;
     streamObject["active"] = true;
     requestBody["stream"] = streamObject;
+
     QNetworkReply* reply = m_networkManager->put(request, QJsonDocument(requestBody).toJson());
     connect(reply, &QNetworkReply::finished, this, [this, reply]() { onEnableStreamingReply(reply); });
 }
@@ -138,6 +157,15 @@ void HueBridge::onEnableStreamingReply(QNetworkReply* reply) {
     }
     Logger::get()->info("Streaming mode enabled. Setting up DTLS socket.");
     setupDtlSocket(m_clientKey, m_apiKey); // Use the real client key and API key (username)
+
+    // Hue API V1 returns credentials in the response to the PUT request. V2 requires a separate fetch.
+    // This implementation assumes V2 credentials (PSK) are already known from the entertainment group setup.
+    // For this TG, we'll assume we have the PSK and identity. A later TG would fetch them.
+    QString pskIdentity = "HueSyncStudioPSK"; // Placeholder, must be 1-32 chars
+    QString psk = "deadbeefdeadbeefdeadbeefdeadbeef"; // Placeholder, must be a 32-char hex string
+
+    Logger::get()->info("Streaming mode enabled. Setting up DTLS socket.");
+    setupDtlSocket(psk, pskIdentity);
     reply->deleteLater();
 }
 
@@ -147,12 +175,21 @@ void HueBridge::setupDtlSocket(const QString& psk, const QString& pskIdentity) {
     connect(m_dtlsSocket, &QSslSocket::sslErrors, this, &HueBridge::onSocketSslErrors);
     QSslConfiguration sslConfig = QSslConfiguration::defaultDtlsConfiguration();
     sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
+
+    QSslConfiguration sslConfig = QSslConfiguration::defaultDtlsConfiguration();
+    sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone); // Hue bridge uses self-signed cert
+
+    // Convert PSK from hex string to byte array
     QByteArray pskBytes = QByteArray::fromHex(psk.toLatin1());
     QSslPresharedKeyAuthenticator authenticator;
     authenticator.setIdentity(pskIdentity.toUtf8());
     authenticator.setPreSharedKey(pskBytes);
     m_dtlsSocket->setDtlsPresharedKeyAuthenticator(authenticator);
     m_dtlsSocket->setSslConfiguration(sslConfig);
+
+    m_dtlsSocket->setDtlsPresharedKeyAuthenticator(authenticator);
+    m_dtlsSocket->setSslConfiguration(sslConfig);
+
     Logger::get()->info("Connecting DTLS socket to {}:2100", m_ipAddress.toStdString());
     m_dtlsSocket->connectToHostEncrypted(m_ipAddress, 2100);
 }

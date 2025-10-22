@@ -62,9 +62,29 @@ void LampGroupManager::sendGroupRestCommand(const QString& groupName, bool on, i
     for (int lampId : group) {
         const Lamp& lamp = m_allLamps[lampId];
         if (m_bridges.contains(lamp.bridgeId)) {
+            m_bridges[lamp.bridgeId]->sendRestCommand(lamp.id, on, brightness, QColor()); // No specific color
             m_bridges[lamp.bridgeId]->sendRestCommand(lamp.id, on, brightness);
         } else {
             Logger::get()->error("Could not send command to lamp {}: Bridge {} not registered.", lamp.id, lamp.bridgeId.toStdString());
+        }
+    }
+}
+
+void LampGroupManager::sendSingleRestCommand(int lampId, bool on, int brightness, const QColor& color) {
+    if (!m_allLamps.contains(lampId)) return;
+
+    const Lamp& lamp = m_allLamps[lampId];
+    if (m_bridges.contains(lamp.bridgeId)) {
+        m_bridges[lamp.bridgeId]->sendRestCommand(lampId, on, brightness, color);
+    }
+}
+
+void LampGroupManager::sendGroupDtlsStream(const QMap<QString, LightStateMap>& bridgeStates) {
+    for (auto it = bridgeStates.begin(); it != bridgeStates.end(); ++it) {
+        const QString& bridgeId = it.key();
+        const LightStateMap& state = it.value();
+        if (m_bridges.contains(bridgeId)) {
+            m_bridges[bridgeId]->sendDtlsStream(state);
         }
     }
 }

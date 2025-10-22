@@ -22,6 +22,10 @@ add_executable(HueSyncStudio
     core/MultiBridgeManager.cpp
     core/LampGroupManager.cpp
     core/ColorGroupEditor.cpp
+    core/EffectEngine.cpp
+    core/effects/PulseEffect.cpp
+    core/effects/SpectrumEffect.cpp
+    core/effects/ColorFlowEffect.cpp
 )
 
 target_include_directories(HueSyncStudio PUBLIC

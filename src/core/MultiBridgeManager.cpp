@@ -61,6 +61,7 @@ void MultiBridgeManager::onDiscoveryFinished(QNetworkReply* reply) {
     }
 
     reply->deleteLater();
+    emit discoveryFinished();
 }
 
 const QList<HueBridge*>& MultiBridgeManager::getBridges() const {

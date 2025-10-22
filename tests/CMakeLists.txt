@@ -7,6 +7,7 @@ add_executable(run_tests
     test_bridge.cpp
     test_lamp_manager.cpp
     test_color_editor.cpp
+    test_effects.cpp
 )
 
 # Define the path to the project source directory for the test executable

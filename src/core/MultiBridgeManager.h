@@ -18,6 +18,9 @@ public:
     void discoverBridges();
     const QList<HueBridge*>& getBridges() const;
 
+signals:
+    void discoveryFinished();
+
 private slots:
     void onDiscoveryFinished(QNetworkReply* reply);
 

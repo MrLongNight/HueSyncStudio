@@ -5,6 +5,7 @@
 #include <QList>
 #include <QString>
 #include "Lamp.h"
+#include "effects/Effect.h"
 
 class HueBridge; // Forward declaration
 
@@ -22,6 +23,9 @@ public:
     void createGroup(const QString& groupName);
     void addLampToGroup(const QString& groupName, int lampId);
 
+    // Command sending logic, called by EffectEngine
+    void sendSingleRestCommand(int lampId, bool on, int brightness, const QColor& color);
+    void sendGroupDtlsStream(const QMap<QString, LightStateMap>& bridgeStates);
     // Command sending logic
     void sendGroupRestCommand(const QString& groupName, bool on, int brightness);
 

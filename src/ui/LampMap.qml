@@ -6,11 +6,17 @@ Pane {
 
     Label {
         text: "2D/3D Map & Control"
-        anchors.centerIn: parent
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+    }
+
     Item {
         id: mapArea
-        anchors.fill: parent
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
         anchors.bottom: previewButton.top
+        anchors.margins: 10
 
         Repeater {
             model: lampModel
@@ -66,3 +72,4 @@ Pane {
         }
     }
 }
+

@@ -3,19 +3,6 @@
 #include <QString>
 #include <QMetaType>
 
-
-struct Lamp {
-    int id;
-    QString name;
-    // Relative position in the entertainment group
-    double x;
-    double y;
-    double z;
-    // Reference to the bridge that controls this lamp
-    QString bridgeId;
-};
-#include <QMetaType>
-
 /**
  * @struct Lamp
  * @brief Represents a single Philips Hue light with its properties.
@@ -30,6 +17,8 @@ struct Lamp {
     double x;
     double y;
     double z;
+    QString bridgeId;
 };
 
 Q_DECLARE_METATYPE(Lamp);
+

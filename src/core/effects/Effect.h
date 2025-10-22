@@ -2,10 +2,18 @@
 
 #include <QMap>
 #include "../Lamp.h"
+#include "../AudioAnalyzer.h"
 
 // A map of Lamp ID to its calculated color state
 using LightStateMap = QMap<int, QColor>;
 
+/**
+ * @class Effect
+ * @brief Abstract base class for all lighting effects.
+ *
+ * Effects process audio data and lamp positions to generate
+ * dynamic color states for each lamp.
+ */
 class Effect {
 public:
     virtual ~Effect() = default;
@@ -24,3 +32,4 @@ public:
 
     virtual Mode getMode() const = 0;
 };
+

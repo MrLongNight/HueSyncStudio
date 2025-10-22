@@ -7,11 +7,18 @@
 #include "Lamp.h"
 #include "effects/Effect.h"
 
-class HueBridge; // Forward declaration
+class HueBridge;
 
 // Represents a user-defined group of lamps, storing their IDs
 using LogicalGroup = QList<int>;
 
+/**
+ * @class LampGroupManager
+ * @brief Manages lamps from multiple bridges and logical lamp groups.
+ *
+ * Stores all lamps discovered from all bridges, and allows creating
+ * logical groups for organized control.
+ */
 class LampGroupManager : public QObject {
     Q_OBJECT
 
@@ -24,21 +31,17 @@ public:
     void addLampToGroup(const QString& groupName, int lampId);
     void clearGroups();
 
-    // Command sending logic, called by EffectEngine
     void sendSingleRestCommand(int lampId, bool on, int brightness, const QColor& color);
     void sendGroupDtlsStream(const QMap<QString, LightStateMap>& bridgeStates);
-
-    const QMap<int, Lamp>& getAllLamps() const;
-    const LogicalGroup& getGroup(const QString& groupName) const;
-    const QMap<QString, LogicalGroup>& getAllLogicalGroups() const;
-    // Command sending logic
     void sendGroupRestCommand(const QString& groupName, bool on, int brightness);
 
     const QMap<int, Lamp>& getAllLamps() const;
     const LogicalGroup& getGroup(const QString& groupName) const;
+    const QMap<QString, LogicalGroup>& getAllLogicalGroups() const;
 
 private:
-    QMap<QString, HueBridge*> m_bridges; // Keyed by bridge ID (IP address)
-    QMap<int, Lamp> m_allLamps; // Keyed by lamp ID
-    QMap<QString, LogicalGroup> m_logicalGroups; // Keyed by group name
+    QMap<QString, HueBridge*> m_bridges;
+    QMap<int, Lamp> m_allLamps;
+    QMap<QString, LogicalGroup> m_logicalGroups;
 };
+

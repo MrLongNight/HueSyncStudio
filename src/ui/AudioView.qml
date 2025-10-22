@@ -1,17 +1,20 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 Pane {
     id: root
 
     Label {
         text: "Live FFT Viewer"
-        anchors.centerIn: parent
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+    }
+
     // Simple Mode Implementation
-    Row {
+    RowLayout {
         anchors.fill: parent
         spacing: 5
-        padding: 5
 
         Rectangle {
             id: lowBandIndicator
@@ -53,3 +56,4 @@ Pane {
         }
     }
 }
+

@@ -5,12 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 COMPONENTS Core Network REQUIRED)
-find_package(Qt6 COMPONENTS Core Network WebSockets REQUIRED)
-find_package(Qt6 COMPONENTS Core Network REQUIRED)
 # --- Build Improvements ---
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -29,6 +24,7 @@ if(ENABLE_LINT)
 endif()
 
 # --- Dependencies and Subdirectories ---
+find_package(Qt6 COMPONENTS Core Network WebSockets REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
@@ -49,8 +45,6 @@ set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 
 # NSIS specific settings
 set(CPACK_NSIS_PACKAGE_NAME "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}")
-set(CPACK_NSIS_INSTALLER_ICON_CODE "") # Use default icon for now
-set(CPACK_NSIS_PACKAGE_NAME "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}")
 set(CPACK_NSIS_INSTALLER_ICON_CODE "")
 set(CPACK_NSIS_CREATE_ICONS_EXTRA "CREATE_DESKTOP_LINK")
 set(CPACK_NSIS_DISPLAY_NAME "${PROJECT_NAME}")
@@ -58,3 +52,4 @@ set(CPACK_NSIS_HELP_LINK "https://github.com/huesyncstudio-project/HueSyncStudio
 set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/huesyncstudio-project/HueSyncStudio")
 
 include(CPack)
+

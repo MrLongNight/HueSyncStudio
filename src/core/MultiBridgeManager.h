@@ -6,8 +6,15 @@
 #include <QNetworkReply>
 
 class HueBridge;
-class LampGroupManager; // Forward declaration
+class LampGroupManager;
 
+/**
+ * @class MultiBridgeManager
+ * @brief Manages discovery and lifecycle of multiple Hue Bridges.
+ *
+ * Discovers bridges on the network and creates HueBridge instances
+ * for each one found.
+ */
 class MultiBridgeManager : public QObject {
     Q_OBJECT
 
@@ -16,9 +23,6 @@ public:
 
     void discoverBridges();
     void addManualBridge(const QString& ip, const QString& apiKey, const QString& clientKey);
-    explicit MultiBridgeManager(QObject* parent = nullptr);
-
-    void discoverBridges();
     const QList<HueBridge*>& getBridges() const;
 
 signals:
@@ -32,3 +36,4 @@ private:
     QList<HueBridge*> m_bridges;
     QNetworkAccessManager* m_networkManager;
 };
+

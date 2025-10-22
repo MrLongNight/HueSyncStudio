@@ -1,5 +1,5 @@
 find_package(Catch2 REQUIRED)
-find_package(Qt6 COMPONENTS Core Network REQUIRED)
+find_package(Qt6 COMPONENTS Core Network Gui WebSockets REQUIRED)
 
 add_executable(run_tests
     test_config.cpp
@@ -29,6 +29,8 @@ target_link_libraries(run_tests PRIVATE
     rtaudio
     Qt6::Core
     Qt6::Network
+    Qt6::Gui
+    Qt6::WebSockets
 )
 
 target_include_directories(run_tests PUBLIC

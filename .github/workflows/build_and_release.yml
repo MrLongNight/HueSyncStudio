@@ -47,7 +47,7 @@ jobs:
       # Classic-Modus mit --classic Flag erzwingen
       - name: Install dependencies
         run: |
-          .\vcpkg\vcpkg.exe install --classic qtbase qtwebsockets qt5-declarative qt5-quickcontrols2 spdlog nlohmann-json catch2 rtaudio --triplet=x64-windows
+          .\vcpkg\vcpkg.exe install --classic qtbase qtwebsockets qt6-declarative qt6-quickcontrols2 spdlog nlohmann-json catch2 rtaudio --triplet=x64-windows
         shell: cmd
 
       - name: Configure CMake

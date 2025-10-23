@@ -5,10 +5,13 @@
   "homepage": "https://github.com/MrLongNight/HueSyncStudio",
   "dependencies": [
     "nlohmann-json",
+    "spdlog",
+    "rtaudio",
+    "catch2",
     {
       "name": "qt",
       "default-features": false,
-      "features": ["qml", "quickcontrols", "widgets"]
+      "features": ["core", "network", "websockets", "qml", "quickcontrols", "widgets"]
     }
   ],
   "builtin-baseline": "2023-10-22"

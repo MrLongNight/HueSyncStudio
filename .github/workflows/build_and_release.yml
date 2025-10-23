@@ -27,34 +27,38 @@ jobs:
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
           echo "Detected version: $version"
 
-      - name: Setup vcpkg
-        run: |
-          git clone https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          ./bootstrap-vcpkg.bat
-        shell: cmd
-
-      - name: Cache vcpkg artifacts
+      - name: Cache vcpkg at short path (Windows)
         uses: actions/cache@v4
         with:
-          path: |
-            vcpkg/installed
-            vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-classic-qt6-${{ hashFiles('.github/workflows/build_and_release.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-classic-qt6-
+          path: C:\vcpkg
+          key: windows-vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: windows-vcpkg-${{ runner.os }}-
+
+      - name: Install vcpkg to C:\vcpkg (Windows)
+        run: |
+          if not exist C:\vcpkg (
+            git clone https://github.com/microsoft/vcpkg C:\vcpkg
+            pushd C:\vcpkg
+            call bootstrap-vcpkg.bat
+            popd
+          )
+          echo VCPKG_ROOT=C:\vcpkg>> %GITHUB_ENV%
+          echo C:\vcpkg>> %GITHUB_PATH%
+        shell: cmd
 
       # Classic-Modus mit korrigierten Qt-Paketnamen
       - name: Install dependencies
         run: |
-          .\vcpkg\vcpkg.exe install --classic qtbase qtwebsockets qtdeclarative qtquickcontrols2 spdlog nlohmann-json catch2 rtaudio --triplet=x64-windows
+          C:\vcpkg\vcpkg.exe install --classic qtbase qtwebsockets qtdeclarative qtquickcontrols2 spdlog nlohmann-json catch2 rtaudio --triplet=x64-windows
         shell: cmd
+        env:
+          VCPKG_ROOT: C:\vcpkg
 
       - name: Configure CMake
         run: |
           cmake -B build -S . ^
             -DCMAKE_BUILD_TYPE=Release ^
-            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake ^
+            -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake ^
             -DBUILD_TESTING=ON ^
             -DVCPKG_TARGET_TRIPLET=x64-windows
         shell: cmd

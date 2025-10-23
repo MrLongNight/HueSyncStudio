@@ -40,14 +40,14 @@ jobs:
           path: |
             vcpkg/installed
             vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-direct-${{ hashFiles('.github/workflows/build_and_release.yml') }}
+          key: ${{ runner.os }}-vcpkg-classic-${{ hashFiles('.github/workflows/build_and_release.yml') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-direct-
+            ${{ runner.os }}-vcpkg-classic-
 
-      # Direkte Installation ohne Manifest-Modus
+      # Classic-Modus mit --classic Flag erzwingen
       - name: Install dependencies
         run: |
-          .\vcpkg\vcpkg.exe install qtbase qtwebsockets qt5-declarative qt5-quickcontrols2 spdlog nlohmann-json catch2 rtaudio --triplet=x64-windows
+          .\vcpkg\vcpkg.exe install --classic qtbase qtwebsockets qt5-declarative qt5-quickcontrols2 spdlog nlohmann-json catch2 rtaudio --triplet=x64-windows
         shell: cmd
 
       - name: Configure CMake
@@ -80,68 +80,42 @@ jobs:
           Get-ChildItem -Path "build" -Recurse -Depth 2 | Select-Object FullName, Length | Format-Table -AutoSize
           
           Write-Host "===== CPack outputs ====="
-          Get-ChildItem -Path "build/_CPack_Packages" -Recurse -Include "*.exe","*.msi","*.nsis" -ErrorAction SilentlyContinue | Select-Object FullName, Length
-          Get-ChildItem -Path "build" -Include "*.exe","*.msi","*.zip" -ErrorAction SilentlyContinue | Select-Object FullName, Length
+          Get-ChildItem -Path "build" -Filter "*.exe" -Recurse | Select-Object FullName, Length
+          Get-ChildItem -Path "build" -Filter "*.zip" -Recurse | Select-Object FullName, Length
         shell: pwsh
 
       - name: Create ZIP archive
         run: |
-          # Mögliche Orte für die ausführbaren Dateien
-          $possibleBuildDirs = @(
-            "build/Release",
-            "build/bin/Release",
-            "build/src/Release"
-          )
+          # Suche nach der Hauptausführungsdatei
+          $exeFiles = Get-ChildItem -Path "build" -Filter "*.exe" -Recurse | 
+                      Where-Object { -not $_.FullName.Contains("_deps") -and -not $_.FullName.Contains("vcpkg") }
           
-          $exeFiles = $null
-          $buildDir = $null
-          
-          foreach ($dir in $possibleBuildDirs) {
-            if (Test-Path $dir) {
-              $exeFiles = Get-ChildItem -Path $dir -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue
-              if ($exeFiles) {
-                $buildDir = $dir
-                break
-              }
-            }
-          }
-          
-          if (-not $buildDir) {
-            Write-Host "Searching for executables in the entire build directory..."
-            $exeFiles = Get-ChildItem -Path "build" -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue | 
-                        Where-Object { -not $_.FullName.Contains("vcpkg") -and -not $_.FullName.Contains("_deps") }
-            
-            if ($exeFiles) {
-              $mainExe = $exeFiles | Where-Object { $_.Name -eq "HueSyncStudio.exe" -or $_.Name -like "*HueSyncStudio*.exe" } | Select-Object -First 1
-              if ($mainExe) {
-                $buildDir = Split-Path -Parent $mainExe.FullName
-              } else {
-                $buildDir = Split-Path -Parent $exeFiles[0].FullName
-              }
-            }
-          }
-          
-          if (-not $buildDir) {
-            Write-Host "ERROR: Could not find any executables in build directories"
+          if (-not $exeFiles) {
+            Write-Host "ERROR: Could not find any executables in the build directory"
             exit 0  # Continue workflow to upload any available artifacts
           }
           
-          Write-Host "Found build directory with executables: $buildDir"
+          # Bevorzuge HueSyncStudio.exe, falls vorhanden
+          $mainExe = $exeFiles | Where-Object { $_.Name -eq "HueSyncStudio.exe" } | Select-Object -First 1
+          if (-not $mainExe) {
+            $mainExe = $exeFiles | Select-Object -First 1
+          }
+          
+          $exeDir = Split-Path -Parent $mainExe.FullName
+          Write-Host "Found main executable: $($mainExe.FullName)"
           
           $version = "${{ steps.get_version.outputs.VERSION }}"
           $zipName = "HueSyncStudio-$version-Win64.zip"
           
-          # Sammle alle relevanten Dateien
-          $filesToZip = @()
-          $filesToZip += Get-ChildItem -Path $buildDir -Filter "*.exe" -Recurse | Select-Object -ExpandProperty FullName
-          $filesToZip += Get-ChildItem -Path $buildDir -Filter "*.dll" -Recurse | Select-Object -ExpandProperty FullName
-          
-          if ($filesToZip.Count -gt 0) {
-            Compress-Archive -Path $filesToZip -DestinationPath "build/$zipName" -Force
-            Write-Host "Created ZIP archive: build/$zipName with $($filesToZip.Count) files"
-          } else {
-            Write-Host "Warning: No files found to include in ZIP"
+          # Sammle alle DLLs im selben Verzeichnis wie die EXE
+          $filesToZip = @($mainExe.FullName)
+          $dllFiles = Get-ChildItem -Path $exeDir -Filter "*.dll" -ErrorAction SilentlyContinue
+          if ($dllFiles) {
+            $filesToZip += $dllFiles.FullName
           }
+          
+          Compress-Archive -Path $filesToZip -DestinationPath "build/$zipName" -Force
+          Write-Host "Created ZIP archive: build/$zipName with $($filesToZip.Count) files"
         shell: pwsh
 
       - name: Upload Release Assets
@@ -151,7 +125,6 @@ jobs:
           files: |
             build/*.exe
             build/*.zip
-            build/*.msi
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', steps.get_version.outputs.VERSION) }}
           name: HueSyncStudio ${{ steps.get_version.outputs.VERSION }}
           generate_release_notes: true

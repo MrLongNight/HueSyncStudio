@@ -8,10 +8,15 @@
     "spdlog",
     "rtaudio",
     "catch2",
+    "qtbase",
+    "qtwebsockets",
     {
-      "name": "qt",
-      "default-features": false,
-      "features": ["core", "network", "websockets", "qml", "quickcontrols", "widgets"]
+      "name": "qt5-declarative",
+      "default-features": true
+    },
+    {
+      "name": "qt5-quickcontrols2",
+      "default-features": true
     }
   ],
   "builtin-baseline": "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"

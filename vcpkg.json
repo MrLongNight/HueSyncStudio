@@ -18,6 +18,5 @@
       "name": "qt6-quickcontrols2",
       "default-features": true
     }
-  ],
-  "builtin-baseline": "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
+  ]
 }

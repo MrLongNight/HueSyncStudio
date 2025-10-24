@@ -19,6 +19,7 @@ jobs:
         with:
           path: s
           fetch-depth: 0
+          submodules: 'recursive'
 
       # Optional: Enable Windows long paths support via registry
       - name: Enable Windows long paths
@@ -45,14 +46,45 @@ jobs:
         working-directory: s
         run: |
           Write-Host "Cloning and updating vcpkg to latest origin/master"
-          git clone https://github.com/microsoft/vcpkg.git vcpkg
+          git clone --depth=1 https://github.com/microsoft/vcpkg.git vcpkg
           cd vcpkg
           git fetch --all --tags
           git checkout origin/master
           git reset --hard origin/master
+          Write-Host "Initializing vcpkg submodules (including ports)..."
           git submodule update --init --recursive
           Write-Host "Bootstrapping vcpkg..."
-          .\bootstrap-vcpkg.bat
+          .\bootstrap-vcpkg.bat -disableMetrics
+
+      - name: Verify vcpkg ports are available
+        shell: powershell
+        working-directory: s
+        run: |
+          Write-Host "Verifying vcpkg ports directory..."
+          if (Test-Path "vcpkg\ports") {
+            Write-Host "✓ vcpkg\ports directory exists"
+            $portCount = (Get-ChildItem "vcpkg\ports" -Directory).Count
+            Write-Host "  Found $portCount port directories"
+            
+            # Check for specific Qt6 ports we need
+            $qt6Declarative = Test-Path "vcpkg\ports\qt6-declarative"
+            $qt6QuickControls = Test-Path "vcpkg\ports\qt6-quickcontrols2"
+            
+            if ($qt6Declarative) {
+              Write-Host "✓ qt6-declarative port found"
+            } else {
+              Write-Host "✗ WARNING: qt6-declarative port NOT found"
+            }
+            
+            if ($qt6QuickControls) {
+              Write-Host "✓ qt6-quickcontrols2 port found"
+            } else {
+              Write-Host "✗ WARNING: qt6-quickcontrols2 port NOT found"
+            }
+          } else {
+            Write-Host "✗ ERROR: vcpkg\ports directory does not exist!"
+            exit 1
+          }
 
       - name: Clear old vcpkg artifacts
         shell: cmd
@@ -67,10 +99,12 @@ jobs:
         with:
           path: |
             s/vcpkg/installed
+            s/vcpkg/packages
+            s/vcpkg/buildtrees
             s/vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-shortpath-qt6-${{ hashFiles('s/vcpkg.json', '.github/workflows/build_and_release.yml') }}
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('s/vcpkg/.git/HEAD', 's/vcpkg.json', '.github/workflows/build_and_release.yml') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-shortpath-qt6-
+            ${{ runner.os }}-vcpkg-
 
       # Show vcpkg manifest to make debugging clearer in logs
       - name: Show vcpkg manifest
@@ -82,6 +116,17 @@ jobs:
           ) else (
             echo "No vcpkg.json found in repository root (s)."
           )
+
+      # Explicitly install Qt6 packages first to ensure they're available
+      - name: Install Qt6 packages explicitly
+        shell: powershell
+        working-directory: s
+        env:
+          VCPKG_ROOT: ${{ github.workspace }}\s\vcpkg
+        run: |
+          Write-Host "Installing qt6-declarative and qt6-quickcontrols2 explicitly..."
+          .\vcpkg\vcpkg.exe install qt6-declarative qt6-quickcontrols2 --triplet x64-windows
+          Write-Host "Qt6 packages installation complete"
 
       # Install dependencies using manifest mode (do not pass package names)
       - name: Install dependencies

@@ -17,64 +17,97 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          path: s
           fetch-depth: 0
+
+      # Optional: Enable Windows long paths support via registry
+      - name: Enable Windows long paths
+        shell: pwsh
+        run: |
+          try {
+            Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1 -ErrorAction SilentlyContinue
+            Write-Host "Windows long paths enabled (if registry access available)"
+          } catch {
+            Write-Host "Could not enable long paths via registry (requires admin), continuing anyway..."
+          }
 
       - name: Extract version from CMake
         id: get_version
         shell: pwsh
+        working-directory: s
         run: |
           $version = Select-String -Path CMakeLists.txt -Pattern 'project\(HueSyncStudio VERSION (.+?) LANGUAGES' | ForEach-Object { $_.Matches.Groups[1].Value }
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
           echo "Detected version: $version"
 
       - name: Setup vcpkg
+        shell: pwsh
+        working-directory: s
         run: |
-          git clone https://github.com/microsoft/vcpkg.git
+          # Clone vcpkg into short path
+          git clone https://github.com/microsoft/vcpkg.git vcpkg
           cd vcpkg
-          ./bootstrap-vcpkg.bat
+          .\bootstrap-vcpkg.bat
+
+      - name: Clear old vcpkg artifacts
         shell: cmd
+        working-directory: s
+        run: |
+          if exist vcpkg\buildtrees rd /s /q vcpkg\buildtrees
+          if exist vcpkg\packages rd /s /q vcpkg\packages
+          echo Cleared old vcpkg build artifacts
 
       - name: Cache vcpkg artifacts
         uses: actions/cache@v4
         with:
           path: |
-            vcpkg/installed
-            vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-classic-qt6-${{ hashFiles('.github/workflows/build_and_release.yml') }}
+            s/vcpkg/installed
+            s/vcpkg/downloads
+          key: ${{ runner.os }}-vcpkg-shortpath-qt6-${{ hashFiles('s/vcpkg.json', '.github/workflows/build_and_release.yml') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-classic-qt6-
+            ${{ runner.os }}-vcpkg-shortpath-qt6-
 
-      # Classic-Modus mit korrigierten Qt-Paketnamen
+      # Install dependencies with short path and explicit environment variables
       - name: Install dependencies
-        run: |
-          .\vcpkg\vcpkg.exe install --classic qtbase qtwebsockets qtdeclarative qtquickcontrols2 spdlog nlohmann-json catch2 rtaudio --triplet=x64-windows
         shell: cmd
+        working-directory: s
+        env:
+          VCPKG_ROOT: ${{ github.workspace }}\s\vcpkg
+          VCPKG_DOWNLOADS: ${{ github.workspace }}\s\vcpkg\downloads
+        run: |
+          .\vcpkg\vcpkg.exe install --triplet x64-windows qtbase qtwebsockets qtdeclarative qtquickcontrols2 spdlog nlohmann-json catch2 rtaudio
 
       - name: Configure CMake
+        shell: cmd
+        working-directory: s
         run: |
           cmake -B build -S . ^
             -DCMAKE_BUILD_TYPE=Release ^
-            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake ^
+            -DCMAKE_TOOLCHAIN_FILE=vcpkg\scripts\buildsystems\vcpkg.cmake ^
             -DBUILD_TESTING=ON ^
             -DVCPKG_TARGET_TRIPLET=x64-windows
-        shell: cmd
 
       - name: Build project
+        shell: cmd
+        working-directory: s
         run: |
           cmake --build build --config Release --parallel
-        shell: cmd
 
       - name: Run tests
+        shell: cmd
+        working-directory: s
         run: |
           ctest --test-dir build --output-on-failure -C Release
-        shell: cmd
 
       - name: Package artifacts
+        shell: pwsh
+        working-directory: s
         run: |
           cmake --build build --config Release --target package || echo "Package step encountered issues but continuing..."
-        shell: pwsh
 
       - name: List all build artifacts
+        shell: pwsh
+        working-directory: s
         run: |
           Write-Host "===== Build directory content ====="
           Get-ChildItem -Path "build" -Recurse -Depth 2 | Select-Object FullName, Length | Format-Table -AutoSize
@@ -82,9 +115,10 @@ jobs:
           Write-Host "===== CPack outputs ====="
           Get-ChildItem -Path "build" -Filter "*.exe" -Recurse | Select-Object FullName, Length
           Get-ChildItem -Path "build" -Filter "*.zip" -Recurse | Select-Object FullName, Length
-        shell: pwsh
 
       - name: Create ZIP archive
+        shell: pwsh
+        working-directory: s
         run: |
           # Suche nach der Hauptausführungsdatei
           $exeFiles = Get-ChildItem -Path "build" -Filter "*.exe" -Recurse | 
@@ -116,15 +150,14 @@ jobs:
           
           Compress-Archive -Path $filesToZip -DestinationPath "build/$zipName" -Force
           Write-Host "Created ZIP archive: build/$zipName with $($filesToZip.Count) files"
-        shell: pwsh
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
           files: |
-            build/*.exe
-            build/*.zip
+            s/build/*.exe
+            s/build/*.zip
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', steps.get_version.outputs.VERSION) }}
           name: HueSyncStudio ${{ steps.get_version.outputs.VERSION }}
           generate_release_notes: true

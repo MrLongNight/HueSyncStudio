@@ -65,17 +65,17 @@ jobs:
             Write-Host "✓ vcpkg\ports directory exists"
             $portCount = (Get-ChildItem "vcpkg\ports" -Directory).Count
             Write-Host "  Found $portCount port directories"
-            
+
             # Check for specific Qt6 ports we need
             $qt6Declarative = Test-Path "vcpkg\ports\qt6-declarative"
             $qt6QuickControls = Test-Path "vcpkg\ports\qt6-quickcontrols2"
-            
+
             if ($qt6Declarative) {
               Write-Host "✓ qt6-declarative port found"
             } else {
               Write-Host "✗ WARNING: qt6-declarative port NOT found"
             }
-            
+
             if ($qt6QuickControls) {
               Write-Host "✓ qt6-quickcontrols2 port found"
             } else {
@@ -188,7 +188,7 @@ jobs:
         run: |
           Write-Host "===== Build directory content ====="
           Get-ChildItem -Path "build" -Recurse -Depth 2 | Select-Object FullName, Length | Format-Table -AutoSize
-          
+
           Write-Host "===== CPack outputs ====="
           Get-ChildItem -Path "build" -Filter "*.exe" -Recurse | Select-Object FullName, Length
           Get-ChildItem -Path "build" -Filter "*.zip" -Recurse | Select-Object FullName, Length
@@ -198,33 +198,33 @@ jobs:
         working-directory: s
         run: |
           # Suche nach der Hauptausführungsdatei
-          $exeFiles = Get-ChildItem -Path "build" -Filter "*.exe" -Recurse | 
+          $exeFiles = Get-ChildItem -Path "build" -Filter "*.exe" -Recurse |
                       Where-Object { -not $_.FullName.Contains("_deps") -and -not $_.FullName.Contains("vcpkg") }
-          
+
           if (-not $exeFiles) {
             Write-Host "ERROR: Could not find any executables in the build directory"
             exit 0  # Continue workflow to upload any available artifacts
           }
-          
+
           # Bevorzuge HueSyncStudio.exe, falls vorhanden
           $mainExe = $exeFiles | Where-Object { $_.Name -eq "HueSyncStudio.exe" } | Select-Object -First 1
           if (-not $mainExe) {
             $mainExe = $exeFiles | Select-Object -First 1
           }
-          
+
           $exeDir = Split-Path -Parent $mainExe.FullName
           Write-Host "Found main executable: $($mainExe.FullName)"
-          
+
           $version = "${{ steps.get_version.outputs.VERSION }}"
           $zipName = "HueSyncStudio-$version-Win64.zip"
-          
+
           # Sammle alle DLLs im selben Verzeichnis wie die EXE
           $filesToZip = @($mainExe.FullName)
           $dllFiles = Get-ChildItem -Path $exeDir -Filter "*.dll" -ErrorAction SilentlyContinue
           if ($dllFiles) {
             $filesToZip += $dllFiles.FullName
           }
-          
+
           Compress-Archive -Path $filesToZip -DestinationPath "build/$zipName" -Force
           Write-Host "Created ZIP archive: build/$zipName with $($filesToZip.Count) files"
 
@@ -237,4 +237,4 @@ jobs:
             s/build/*.zip
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', steps.get_version.outputs.VERSION) }}
           name: HueSyncStudio ${{ steps.get_version.outputs.VERSION }}
-          generate_release_notes: true 
+          generate_release_notes: true

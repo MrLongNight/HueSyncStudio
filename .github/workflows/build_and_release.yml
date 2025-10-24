@@ -40,13 +40,18 @@ jobs:
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
           echo "Detected version: $version"
 
-      - name: Setup vcpkg
-        shell: pwsh
+      - name: Update and bootstrap vcpkg
+        shell: powershell
         working-directory: s
         run: |
-          # Clone vcpkg into short path
+          Write-Host "Cloning and updating vcpkg to latest origin/master"
           git clone https://github.com/microsoft/vcpkg.git vcpkg
           cd vcpkg
+          git fetch --all --tags
+          git checkout origin/master
+          git reset --hard origin/master
+          git submodule update --init --recursive
+          Write-Host "Bootstrapping vcpkg..."
           .\bootstrap-vcpkg.bat
 
       - name: Clear old vcpkg artifacts
@@ -87,6 +92,22 @@ jobs:
           VCPKG_DOWNLOADS: ${{ github.workspace }}\s\vcpkg\downloads
         run: |
           .\vcpkg\vcpkg.exe install --triplet x64-windows
+
+      - name: Verify Qt6 ports installation
+        shell: powershell
+        working-directory: s
+        run: |
+          Write-Host "Verifying qt6-declarative and qt6-quickcontrols2 are available..."
+          $vcpkg = ".\vcpkg\vcpkg.exe"
+          if (Test-Path $vcpkg) {
+            Write-Host "Checking qt6-declarative..."
+            & $vcpkg list qt6-declarative
+            Write-Host "Checking qt6-quickcontrols2..."
+            & $vcpkg list qt6-quickcontrols2
+            Write-Host "Qt6 ports verification complete"
+          } else {
+            Write-Host "vcpkg not found, skipping verification"
+          }
 
       - name: Configure CMake
         shell: cmd

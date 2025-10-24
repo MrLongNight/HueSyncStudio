@@ -67,7 +67,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vcpkg-shortpath-qt6-
 
-      # Install dependencies with short path and explicit environment variables
+      # Show vcpkg manifest to make debugging clearer in logs
+      - name: Show vcpkg manifest
+        shell: cmd
+        working-directory: s
+        run: |
+          if exist vcpkg.json (
+            type vcpkg.json
+          ) else (
+            echo "No vcpkg.json found in repository root (s)."
+          )
+
+      # Install dependencies using manifest mode (do not pass package names)
       - name: Install dependencies
         shell: cmd
         working-directory: s
@@ -75,7 +86,7 @@ jobs:
           VCPKG_ROOT: ${{ github.workspace }}\s\vcpkg
           VCPKG_DOWNLOADS: ${{ github.workspace }}\s\vcpkg\downloads
         run: |
-          .\vcpkg\vcpkg.exe install --triplet x64-windows qtbase qtwebsockets qtdeclarative qtquickcontrols2 spdlog nlohmann-json catch2 rtaudio
+          .\vcpkg\vcpkg.exe install --triplet x64-windows
 
       - name: Configure CMake
         shell: cmd
@@ -160,4 +171,4 @@ jobs:
             s/build/*.zip
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', steps.get_version.outputs.VERSION) }}
           name: HueSyncStudio ${{ steps.get_version.outputs.VERSION }}
-          generate_release_notes: true
+          generate_release_notes: true 

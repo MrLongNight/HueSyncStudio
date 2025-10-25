@@ -7,19 +7,19 @@ if (Test-Path 'vcpkg\ports') {
     Write-Host "Found $portCount port directories"
 
     # Check for specific Qt6 ports we need
-    $qt6Declarative = Test-Path 'vcpkg\ports\qt6-declarative'
-    $qt6QuickControls = Test-Path 'vcpkg\ports\qt6-quickcontrols2'
+    $qtDeclarative = Test-Path 'vcpkg\ports\qtdeclarative'
+    $qtQuickControls2 = Test-Path 'vcpkg\ports\qtquickcontrols2'
 
-    if ($qt6Declarative) {
-        Write-Host 'qt6-declarative port found'
+    if ($qtDeclarative) {
+        Write-Host 'qtdeclarative port found'
     } else {
-        Write-Host 'WARNING: qt6-declarative port NOT found'
+        Write-Host 'WARNING: qtdeclarative port NOT found'
     }
 
-    if ($qt6QuickControls) {
-        Write-Host 'qt6-quickcontrols2 port found'
+    if ($qtQuickControls2) {
+        Write-Host 'qtquickcontrols2 port found'
     } else {
-        Write-Host 'WARNING: qt6-quickcontrols2 port NOT found'
+        Write-Host 'WARNING: qtquickcontrols2 port NOT found'
     }
 } else {
     Write-Host 'ERROR: vcpkg\ports directory does not exist!'

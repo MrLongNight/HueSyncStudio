@@ -11,11 +11,11 @@
     "qtbase",
     "qtwebsockets",
     {
-      "name": "qt6-declarative",
+      "name": "qtdeclarative",
       "default-features": true
     },
     {
-      "name": "qt6-quickcontrols2",
+      "name": "qtquickcontrols2",
       "default-features": true
     }
   ]

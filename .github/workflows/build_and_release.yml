@@ -106,13 +106,13 @@ jobs:
         shell: powershell
         working-directory: s
         run: |
-          Write-Host "Verifying qt6-declarative and qt6-quickcontrols2 are available..."
+          Write-Host "Verifying qtdeclarative and qtquickcontrols2 are available..."
           $vcpkg = ".\vcpkg\vcpkg.exe"
           if (Test-Path $vcpkg) {
-            Write-Host "Checking qt6-declarative..."
-            & $vcpkg list qt6-declarative
-            Write-Host "Checking qt6-quickcontrols2..."
-            & $vcpkg list qt6-quickcontrols2
+            Write-Host "Checking qtdeclarative..."
+            & $vcpkg list qtdeclarative
+            Write-Host "Checking qtquickcontrols2..."
+            & $vcpkg list qtquickcontrols2
             Write-Host "Qt6 ports verification complete"
           } else {
             Write-Host "vcpkg not found, skipping verification"

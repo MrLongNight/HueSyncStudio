@@ -1,4 +1,4 @@
-# GitHub Actions Workflow - Problem gelost [FIXED]
+# GitHub Actions Workflow - Problem gelöst [FIXED]
 
 ## Zusammenfassung der Änderungen
 

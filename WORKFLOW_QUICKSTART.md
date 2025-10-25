@@ -63,7 +63,7 @@ project(HueSyncStudio VERSION 1.0.0 LANGUAGES CXX)
 
 ### Workflow
 - Dateiname: `.github/workflows/build-and-release.yml` (mit Bindestrich!)
-- Unicode-Zeichen ersetzt: `[OK]` statt Haken, `[ERROR]` statt X
+- Unicode-Zeichen ersetzt: Haken-Symbol → `[OK]`, X-Symbol → `[ERROR]`
 - Encoding: us-ascii (sicher für PowerShell)
 
 ## Bei Problemen

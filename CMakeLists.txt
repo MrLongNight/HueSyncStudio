@@ -1,28 +1,3 @@
-cmake_minimum_required(VERSION 3.21)
-
-project(HueSyncStudio VERSION 1.0.0 LANGUAGES CXX)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Find vcpkg packages
-find_package(nlohmann_json CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
-find_package(RtAudio CONFIG REQUIRED)
-find_package(Catch2 CONFIG REQUIRED)
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Network WebSockets)
-
-# Include subdirectories
-add_subdirectory(libs)
-add_subdirectory(src)
-
-# Testing
-option(BUILD_TESTING "Build tests" ON)
-if(BUILD_TESTING)
-    enable_testing()
-    add_subdirectory(tests)
-endif()
-
 # --- CPack/NSIS Installer Configuration ---
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")

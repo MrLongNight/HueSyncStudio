@@ -2,13 +2,13 @@
 
 ## Schnellstart
 
-### Problem behoben ✓
+### Problem behoben [OK]
 
 Die GitHub Actions Build-Pipeline funktioniert jetzt korrekt:
-- ✓ Keine PowerShell-Encoding-Fehler mehr
-- ✓ Alle Unicode-Zeichen durch ASCII ersetzt
-- ✓ CMakeLists.txt vollständig und korrekt
-- ✓ Workflow validiert und getestet
+- [OK] Keine PowerShell-Encoding-Fehler mehr
+- [OK] Alle Unicode-Zeichen durch ASCII ersetzt
+- [OK] CMakeLists.txt vollständig und korrekt
+- [OK] Workflow validiert und getestet
 
 ## Verwendung
 
@@ -63,7 +63,7 @@ project(HueSyncStudio VERSION 1.0.0 LANGUAGES CXX)
 
 ### Workflow
 - Dateiname: `.github/workflows/build-and-release.yml` (mit Bindestrich!)
-- Unicode-Zeichen ersetzt: `✓` → `[OK]`, `✗` → `[ERROR]`
+- Unicode-Zeichen ersetzt: `[OK]` statt Haken, `[ERROR]` statt X
 - Encoding: us-ascii (sicher für PowerShell)
 
 ## Bei Problemen

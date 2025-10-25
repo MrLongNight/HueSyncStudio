@@ -92,17 +92,6 @@ jobs:
             echo "No vcpkg.json found in repository root (s)."
           )
 
-      # Explicitly install Qt6 packages first to ensure they're available
-      - name: Install Qt6 packages explicitly
-        shell: powershell
-        working-directory: s
-        env:
-          VCPKG_ROOT: ${{ github.workspace }}\s\vcpkg
-        run: |
-          Write-Host "Installing qt6-declarative and qt6-quickcontrols2 explicitly..."
-          .\vcpkg\vcpkg.exe install qt6-declarative qt6-quickcontrols2 --triplet x64-windows
-          Write-Host "Qt6 packages installation complete"
-
       # Install dependencies using manifest mode (do not pass package names)
       - name: Install dependencies
         shell: cmd

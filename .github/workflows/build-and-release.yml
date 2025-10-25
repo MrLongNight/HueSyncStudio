@@ -21,7 +21,6 @@ jobs:
           fetch-depth: 0
           submodules: 'recursive'
 
-      # Optional: Enable Windows long paths support via registry
       - name: Enable Windows long paths
         shell: pwsh
         run: |
@@ -42,7 +41,7 @@ jobs:
           echo "Detected version: $version"
 
       - name: Update and bootstrap vcpkg
-        shell: powershell
+        shell: pwsh
         working-directory: s
         run: |
           Write-Host "Cloning and updating vcpkg to latest origin/master"
@@ -57,12 +56,12 @@ jobs:
           .\bootstrap-vcpkg.bat -disableMetrics
 
       - name: Verify vcpkg ports are available
-        shell: powershell
+        shell: pwsh
         working-directory: s
         run: |
           Write-Host "Verifying vcpkg ports directory..."
           if (Test-Path "vcpkg\ports") {
-            Write-Host "✓ vcpkg\ports directory exists"
+            Write-Host "[OK] vcpkg\ports directory exists"
             $portCount = (Get-ChildItem "vcpkg\ports" -Directory).Count
             Write-Host "  Found $portCount port directories"
 
@@ -71,18 +70,18 @@ jobs:
             $qt6QuickControls = Test-Path "vcpkg\ports\qt6-quickcontrols2"
 
             if ($qt6Declarative) {
-              Write-Host "✓ qt6-declarative port found"
+              Write-Host "[OK] qt6-declarative port found"
             } else {
-              Write-Host "✗ WARNING: qt6-declarative port NOT found"
+              Write-Host "[WARN] qt6-declarative port NOT found"
             }
 
             if ($qt6QuickControls) {
-              Write-Host "✓ qt6-quickcontrols2 port found"
+              Write-Host "[OK] qt6-quickcontrols2 port found"
             } else {
-              Write-Host "✗ WARNING: qt6-quickcontrols2 port NOT found"
+              Write-Host "[WARN] qt6-quickcontrols2 port NOT found"
             }
           } else {
-            Write-Host "✗ ERROR: vcpkg\ports directory does not exist!"
+            Write-Host "[ERROR] vcpkg\ports directory does not exist!"
             exit 1
           }
 
@@ -102,11 +101,10 @@ jobs:
             s/vcpkg/packages
             s/vcpkg/buildtrees
             s/vcpkg/downloads
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('s/vcpkg/.git/HEAD', 's/vcpkg.json', '.github/workflows/build_and_release.yml') }}
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('s/vcpkg/.git/HEAD', 's/vcpkg.json', '.github/workflows/build-and-release.yml') }}
           restore-keys: |
             ${{ runner.os }}-vcpkg-
 
-      # Show vcpkg manifest to make debugging clearer in logs
       - name: Show vcpkg manifest
         shell: cmd
         working-directory: s
@@ -117,9 +115,8 @@ jobs:
             echo "No vcpkg.json found in repository root (s)."
           )
 
-      # Explicitly install Qt6 packages first to ensure they're available
       - name: Install Qt6 packages explicitly
-        shell: powershell
+        shell: pwsh
         working-directory: s
         env:
           VCPKG_ROOT: ${{ github.workspace }}\s\vcpkg
@@ -128,7 +125,6 @@ jobs:
           .\vcpkg\vcpkg.exe install qt6-declarative qt6-quickcontrols2 --triplet x64-windows
           Write-Host "Qt6 packages installation complete"
 
-      # Install dependencies using manifest mode (do not pass package names)
       - name: Install dependencies
         shell: cmd
         working-directory: s
@@ -139,7 +135,7 @@ jobs:
           .\vcpkg\vcpkg.exe install --triplet x64-windows
 
       - name: Verify Qt6 ports installation
-        shell: powershell
+        shell: pwsh
         working-directory: s
         run: |
           Write-Host "Verifying qt6-declarative and qt6-quickcontrols2 are available..."
@@ -197,16 +193,16 @@ jobs:
         shell: pwsh
         working-directory: s
         run: |
-          # Suche nach der Hauptausführungsdatei
+          # Search for main executable
           $exeFiles = Get-ChildItem -Path "build" -Filter "*.exe" -Recurse |
                       Where-Object { -not $_.FullName.Contains("_deps") -and -not $_.FullName.Contains("vcpkg") }
 
           if (-not $exeFiles) {
             Write-Host "ERROR: Could not find any executables in the build directory"
-            exit 0  # Continue workflow to upload any available artifacts
+            exit 0
           }
 
-          # Bevorzuge HueSyncStudio.exe, falls vorhanden
+          # Prefer HueSyncStudio.exe if available
           $mainExe = $exeFiles | Where-Object { $_.Name -eq "HueSyncStudio.exe" } | Select-Object -First 1
           if (-not $mainExe) {
             $mainExe = $exeFiles | Select-Object -First 1
@@ -218,7 +214,7 @@ jobs:
           $version = "${{ steps.get_version.outputs.VERSION }}"
           $zipName = "HueSyncStudio-$version-Win64.zip"
 
-          # Sammle alle DLLs im selben Verzeichnis wie die EXE
+          # Collect all DLLs in the same directory as the EXE
           $filesToZip = @($mainExe.FullName)
           $dllFiles = Get-ChildItem -Path $exeDir -Filter "*.dll" -ErrorAction SilentlyContinue
           if ($dllFiles) {
